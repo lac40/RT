@@ -8,6 +8,7 @@ using RepTrackData.Repositories;
 using RepTrackDomain.Interfaces;
 using RepTrackDomain.Models;
 using RepTrackWeb.Extensions;
+using RepTrackWeb.Middleware;
 
 namespace RepTrackWeb
 {
@@ -59,6 +60,9 @@ namespace RepTrackWeb
             }
 
             app.UseHttpsRedirection();
+
+            app.UseExceptionHandlingMiddleware();
+
             app.UseStaticFiles();
 
             app.UseRouting();

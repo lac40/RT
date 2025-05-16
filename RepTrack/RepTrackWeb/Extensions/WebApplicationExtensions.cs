@@ -1,4 +1,5 @@
-﻿using RepTrackData.Seed;
+﻿using RepTrackData;
+using RepTrackData.Seed;
 
 namespace RepTrackWeb.Extensions;
 
@@ -10,12 +11,12 @@ public static class WebApplicationExtensions
         var services = scope.ServiceProvider;
         try
         {
-            // Using ConfigureAwait(false) helps prevent deadlocks
-            var roleSeeder = services.GetRequiredService<RoleSeeder>();
-            roleSeeder.SeedRolesAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            // Call the static method directly, passing in the service provider
+            RoleSeeder.SeedRolesAsync(services).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            var exerciseSeeder = services.GetRequiredService<ExerciseSeeder>();
-            exerciseSeeder.SeedExercisesAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            // Get the database context and pass it to the static method
+            var dbContext = services.GetRequiredService<ApplicationDbContext>();
+            ExerciseSeeder.SeedExercisesAsync(dbContext).ConfigureAwait(false).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
