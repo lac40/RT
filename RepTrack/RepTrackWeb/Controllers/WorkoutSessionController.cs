@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RepTrackBusiness.DTOs;
 using RepTrackBusiness.Interfaces;
 using RepTrackDomain.Enums;
-using RepTrackDomain.Models.WorkoutSession;
+using RepTrackWeb.Models.WorkoutSession;
 using AutoMapper;
 using System.Security.Claims;
 

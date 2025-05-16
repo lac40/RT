@@ -1,0 +1,30 @@
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using RepTrackDomain.Enums;
+using System.ComponentModel.DataAnnotations;
+
+namespace RepTrackWeb.Models.Exercise
+{
+    public class EditExerciseViewModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [Display(Name = "Exercise Name")]
+        [MaxLength(100)]
+        public string Name { get; set; }
+
+        [Display(Name = "Description")]
+        [MaxLength(500)]
+        public string Description { get; set; }
+
+        [Required]
+        [Display(Name = "Primary Muscle Group")]
+        public MuscleGroup PrimaryMuscleGroup { get; set; }
+
+        [Display(Name = "Required Equipment")]
+        [MaxLength(100)]
+        public string EquipmentRequired { get; set; }
+
+        public List<SelectListItem> MuscleGroups { get; set; } = new List<SelectListItem>();
+    }
+}
