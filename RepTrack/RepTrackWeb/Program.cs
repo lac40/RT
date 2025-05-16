@@ -43,6 +43,13 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+            });
+
+            builder.Services.AddMemoryCache();
+
             var app = builder.Build();
 
             app.SeedData();
@@ -68,6 +75,8 @@ namespace RepTrackWeb
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseResponseCompression();
 
             app.MapControllerRoute(
                 name: "default",

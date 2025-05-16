@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using RepTrackBusiness.DTOs;
 using RepTrackDomain.Models;
+using RepTrackWeb.Models.Exercise;
+using RepTrackWeb.Models.WorkoutSession;
 
 namespace RepTrackBusiness.Mapper
 {
@@ -25,8 +22,17 @@ namespace RepTrackBusiness.Mapper
             CreateMap<Exercise, ExerciseDto>()
                 .ForMember(dest => dest.SecondaryMuscleGroups, opt => opt.MapFrom(src => src.SecondaryMuscleGroups));
 
-            // Map from DTOs to domain models (if needed)
-            // These would be more complex and typically involve CreateMap<WorkoutSessionDto, WorkoutSession>() etc.
+            // Map from domain models to view models
+            CreateMap<WorkoutSession, WorkoutSessionListItemViewModel>()
+                .ForMember(dest => dest.ExerciseCount, opt => opt.MapFrom(src => src.Exercises.Count));
+
+            CreateMap<WorkoutSession, WorkoutSessionDetailViewModel>();
+            CreateMap<WorkoutExercise, WorkoutSessionDetailViewModel.ExerciseViewModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Exercise.Name));
+            CreateMap<ExerciseSet, WorkoutSessionDetailViewModel.SetViewModel>();
+
+            CreateMap<Exercise, ExerciseListItemViewModel>();
+            CreateMap<Exercise, ExerciseDetailViewModel>();
         }
     }
 }
