@@ -7,6 +7,7 @@ using RepTrackData;
 using RepTrackData.Repositories;
 using RepTrackDomain.Interfaces;
 using RepTrackDomain.Models;
+using RepTrackWeb.Extensions;
 
 namespace RepTrackWeb
 {
@@ -25,9 +26,11 @@ namespace RepTrackWeb
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            // Configure Identity with custom ApplicationUser
+            // Configure Identity with custom ApplicationUser and roles
             builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
 
             builder.Services.AddControllersWithViews();
 
@@ -40,6 +43,8 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
             var app = builder.Build();
+
+            app.SeedData();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
