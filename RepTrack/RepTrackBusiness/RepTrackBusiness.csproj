@@ -27,7 +27,6 @@
     <Folder Include="Extensions\" />
     <Folder Include="Mapper\" />
     <Folder Include="Validation\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
