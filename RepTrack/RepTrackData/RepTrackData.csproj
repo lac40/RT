@@ -23,4 +23,11 @@
     <ProjectReference Include="..\RepTrackDomain\RepTrackDomain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Configurations\" />
+    <Folder Include="Interfaces\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace RepTrackWeb.Data.Migrations
+namespace RepTrackData.Migrations
 {
     public partial class CreateIdentitySchema : Migration
     {
