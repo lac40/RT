@@ -1,6 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using RepTrackWeb.Data;
+using RepTrackBusiness.Interfaces;
+using RepTrackBusiness.Mapper;
+using RepTrackBusiness.Services;
+using RepTrackData;
+using RepTrackData.Repositories;
+using RepTrackDomain.Interfaces;
+using RepTrackDomain.Models;
 
 namespace RepTrackWeb
 {
@@ -12,13 +18,26 @@ namespace RepTrackWeb
 
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+            // Configure DbContext with SQL Server
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            // Configure Identity with custom ApplicationUser
+            builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
             builder.Services.AddControllersWithViews();
+
+            // Register AutoMapper
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+            // Register services for dependency injection
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
+            builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
             var app = builder.Build();
 
