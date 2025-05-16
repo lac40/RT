@@ -37,6 +37,7 @@ namespace RepTrackWeb
 
             // Register AutoMapper
             builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.AddAutoMapper(typeof(RepTrackBusiness.Mapper.MappingProfile), typeof(RepTrackWeb.Mapping.ViewModelMappingProfile));
 
             // Register services for dependency injection
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
