@@ -1,4 +1,5 @@
-﻿@model IEnumerable<RepTrackWeb.Models.WorkoutSession.WorkoutSessionListItemViewModel>
+﻿@using RepTrackWeb.Models.Pagination
+@model PaginatedList<RepTrackWeb.Models.WorkoutSession.WorkoutSessionListItemViewModel>
 
 @{
     ViewData["Title"] = "My Workouts";
@@ -57,5 +58,9 @@
                 </tbody>
             </table>
         </div>
+        @if (Model.TotalPages > 1)
+        {
+            <partial name="_Pagination" model="Model" />
+        }
     }
 </div>

@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepTrackBusiness.DTOs;
 using RepTrackBusiness.Interfaces;
 using RepTrackDomain.Enums;
+using RepTrackWeb.Models.Pagination;
 using RepTrackWeb.Models.WorkoutSession;
-using AutoMapper;
 using System.Security.Claims;
 
 namespace RepTrackWeb.Controllers
@@ -27,12 +28,16 @@ namespace RepTrackWeb.Controllers
         }
 
         // GET: WorkoutSession
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var workouts = await _workoutService.GetUserWorkoutsAsync(userId);
             var viewModels = _mapper.Map<List<WorkoutSessionListItemViewModel>>(workouts);
-            return View(viewModels);
+
+            // Create paginated list
+            var paginatedList = PaginatedList<WorkoutSessionListItemViewModel>.Create(viewModels, page, pageSize);
+
+            return View(paginatedList);
         }
 
         // GET: WorkoutSession/Details/5
