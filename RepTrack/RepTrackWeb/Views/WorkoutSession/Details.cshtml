@@ -9,6 +9,7 @@
         <h1>Workout Details</h1>
         <div>
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Delete</a>
             <a asp-action="Index" class="btn btn-secondary">Back to List</a>
         </div>
     </div>
@@ -61,10 +62,20 @@
                             </h2>
                             <div id="collapse-@exercise.Id" class="accordion-collapse collapse" aria-labelledby="heading-@exercise.Id" data-bs-parent="#exerciseAccordion">
                                 <div class="accordion-body">
-                                    @if (!string.IsNullOrEmpty(exercise.Notes))
-                                    {
-                                        <p>Notes: @exercise.Notes</p>
-                                    }
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            @if (!string.IsNullOrEmpty(exercise.Notes))
+                                            {
+                                                <p>Notes: @exercise.Notes</p>
+                                            }
+                                        </div>
+                                        <div>
+                                            <a asp-controller="WorkoutExercise" asp-action="Edit" asp-route-id="@exercise.Id" asp-route-workoutId="@Model.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                            <form asp-controller="WorkoutExercise" asp-action="Delete" asp-route-id="@exercise.Id" asp-route-workoutId="@Model.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this exercise? All sets will also be deleted.')">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
 
                                     @if (exercise.Sets.Any())
                                     {
@@ -101,7 +112,12 @@
                                                             }
                                                         </td>
                                                         <td>
-                                                            <!-- Add edit/delete actions if needed -->
+                                                            <div class="btn-group">
+                                                                <a asp-controller="ExerciseSet" asp-action="Edit" asp-route-id="@set.Id" asp-route-workoutId="@Model.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                                <form asp-controller="ExerciseSet" asp-action="Delete" asp-route-id="@set.Id" asp-route-workoutId="@Model.Id" method="post" class="d-inline">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this set?')">Delete</button>
+                                                                </form>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 }

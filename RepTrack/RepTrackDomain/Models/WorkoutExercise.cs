@@ -71,9 +71,10 @@ namespace RepTrackDomain.Models
         /// </summary>
         /// <param name="notes">New notes</param>
         /// <param name="orderInWorkout">New order in workout</param>
-        public void Update(string notes, int orderInWorkout)
+        public void Update(string notes,int exerciseId, int orderInWorkout)
         {
             Notes = notes;
+            ExerciseId = exerciseId;
             OrderInWorkout = orderInWorkout;
             SetUpdated();
         }

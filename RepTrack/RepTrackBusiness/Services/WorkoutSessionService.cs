@@ -96,5 +96,47 @@ namespace RepTrackBusiness.Services
             workout.AddExercise(workoutExercise);
             await _unitOfWork.CompleteAsync();
         }
+
+        public async Task UpdateWorkoutExerciseAsync(int workoutExerciseId, int exerciseId, int orderInWorkout, string notes, string userId)
+        {
+            // Get the workout exercise with its associated workout
+            var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdWithWorkoutAsync(workoutExerciseId);
+
+            if (workoutExercise == null)
+                throw new NotFoundException($"Workout exercise with ID {workoutExerciseId} was not found.");
+
+            // Get the workout to verify ownership
+            var workout = workoutExercise.WorkoutSession;
+            if (workout.UserId != userId)
+                throw new AccessDeniedException("You do not have permission to modify this workout.");
+
+            // Verify the new exercise exists
+            var exercise = await _unitOfWork.Exercises.GetByIdAsync(exerciseId);
+            if (exercise == null)
+                throw new NotFoundException($"Exercise with ID {exerciseId} was not found.");
+
+            // Update the workout exercise
+            workoutExercise.Update(notes, exerciseId, orderInWorkout);
+
+            await _unitOfWork.CompleteAsync();
+        }
+
+        public async Task RemoveExerciseFromWorkoutAsync(int workoutExerciseId, string userId)
+        {
+            // Get the workout exercise with its associated workout
+            var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdWithWorkoutAsync(workoutExerciseId);
+
+            if (workoutExercise == null)
+                throw new NotFoundException($"Workout exercise with ID {workoutExerciseId} was not found.");
+
+            // Get the workout to verify ownership
+            var workout = workoutExercise.WorkoutSession;
+            if (workout.UserId != userId)
+                throw new AccessDeniedException("You do not have permission to modify this workout.");
+
+            // Remove the workout exercise
+            _unitOfWork.WorkoutExercises.Remove(workoutExercise);
+            await _unitOfWork.CompleteAsync();
+        }
     }
 }

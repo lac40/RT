@@ -44,5 +44,15 @@ namespace RepTrackBusiness.Interfaces
         /// Adds an exercise to a workout session
         /// </summary>
         Task AddExerciseToWorkoutAsync(int workoutId, int exerciseId, int orderInWorkout, string notes, string userId);
+
+        /// <summary>
+        /// Updates an exercise in a workout session
+        /// </summary>
+        Task UpdateWorkoutExerciseAsync(int workoutExerciseId, int exerciseId, int orderInWorkout, string notes, string userId);
+
+        /// <summary>
+        /// Removes an exercise from a workout session
+        /// </summary>
+        Task RemoveExerciseFromWorkoutAsync(int workoutExerciseId, string userId);
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepTrackBusiness.Interfaces;
 using RepTrackDomain.Enums;
+using RepTrackWeb.Models.Exercise;
 using RepTrackWeb.Models.WorkoutExercise;
 using System.Security.Claims;
 
@@ -79,6 +80,85 @@ namespace RepTrackWeb.Controllers
             }).ToList();
 
             return View(model);
+        }
+
+        // GET: WorkoutExercise/Edit/5
+        public async Task<IActionResult> Edit(int id, int workoutId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Verify workout exists and user can access it
+            var workout = await _workoutService.GetWorkoutByIdAsync(workoutId, userId);
+            if (workout == null)
+                return NotFound();
+
+            // Find the exercise in the workout
+            var workoutExercise = workout.Exercises.FirstOrDefault(e => e.Id == id);
+            if (workoutExercise == null)
+                return NotFound();
+
+            // Get all available exercises
+            var exercises = await _exerciseService.GetAllExercisesAsync();
+
+            var model = new Models.WorkoutExercise.EditExerciseViewModel
+            {
+                Id = id,
+                WorkoutId = workoutId,
+                ExerciseId = workoutExercise.ExerciseId,
+                OrderInWorkout = workoutExercise.OrderInWorkout,
+                Notes = workoutExercise.Notes,
+                Exercises = exercises.Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = e.Name,
+                    Value = e.Id.ToString()
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        // POST: WorkoutExercise/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Models.WorkoutExercise.EditExerciseViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // Add service method for updating workout exercise
+                await _workoutService.UpdateWorkoutExerciseAsync(
+                    model.Id,
+                    model.ExerciseId,
+                    model.OrderInWorkout,
+                    model.Notes,
+                    userId);
+
+                return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
+            }
+
+            // If we got this far, something failed, redisplay form
+            var exercises = await _exerciseService.GetAllExercisesAsync();
+            model.Exercises = exercises.Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Text = e.Name,
+                Value = e.Id.ToString()
+            }).ToList();
+
+            return View(model);
+        }
+
+        // POST: WorkoutExercise/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, int workoutId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Add service method for deleting workout exercise
+            await _workoutService.RemoveExerciseFromWorkoutAsync(id, userId);
+
+            return RedirectToAction("Details", "WorkoutSession", new { id = workoutId });
         }
     }
 }
