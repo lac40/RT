@@ -74,14 +74,18 @@ namespace RepTrackDomain.Models
         /// <param name="name">Name of the exercise</param>
         /// <param name="primaryMuscleGroup">Primary muscle group</param>
         /// <param name="createdByUserId">ID of the user creating this exercise</param>
-        public Exercise(string name, MuscleGroup primaryMuscleGroup, string createdByUserId)
+        public Exercise(string name, MuscleGroup primaryMuscleGroup, string userId)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Exercise name cannot be empty", nameof(name));
 
+            // Check for null or empty userId
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentNullException(nameof(userId));
+
             Name = name;
             PrimaryMuscleGroup = primaryMuscleGroup;
-            CreatedByUserId = createdByUserId ?? throw new ArgumentNullException(nameof(createdByUserId));
+            CreatedByUserId = userId;
             IsSystemExercise = false;
         }
 

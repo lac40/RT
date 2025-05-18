@@ -115,12 +115,14 @@ namespace RepTrackDomain.Models
         public decimal GetHeaviestWeight()
         {
             decimal heaviestWeight = 0;
+            bool hasAnyWeights = false;
 
             foreach (var set in Sets)
             {
-                if (set.Weight > heaviestWeight)
+                if (!hasAnyWeights || set.Weight > heaviestWeight)
                 {
                     heaviestWeight = set.Weight;
+                    hasAnyWeights = true;
                 }
             }
 

@@ -49,10 +49,13 @@ namespace RepTrackBusiness.Services
                 EquipmentRequired = equipmentRequired
             };
 
-            // Add secondary muscle groups
-            foreach (var muscleGroup in secondaryMuscleGroups)
+            // Add secondary muscle groups (if any)
+            if (secondaryMuscleGroups != null)
             {
-                exercise.AddSecondaryMuscleGroup(muscleGroup);
+                foreach (var muscleGroup in secondaryMuscleGroups)
+                {
+                    exercise.AddSecondaryMuscleGroup(muscleGroup);
+                }
             }
 
             await _unitOfWork.Exercises.AddAsync(exercise);

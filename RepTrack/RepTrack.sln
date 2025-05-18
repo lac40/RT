@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36109.1 d17.14
+VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepTrackWeb", "RepTrackWeb\RepTrackWeb.csproj", "{104FA5B7-7FAF-4C4A-AEE8-A64EBE923FB4}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepTrackData", "RepTrackData\RepTrackData.csproj", "{A38D66AD-803C-4346-AC6A-7607156CE4A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepTrackDomain", "RepTrackDomain\RepTrackDomain.csproj", "{DDCB8BFA-537A-451C-9043-E788DA09F847}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepTrackTests", "RepTrackTests\RepTrackTests.csproj", "{2C6AC4CF-DBEC-4478-8151-E422B10F915D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{DDCB8BFA-537A-451C-9043-E788DA09F847}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DDCB8BFA-537A-451C-9043-E788DA09F847}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DDCB8BFA-537A-451C-9043-E788DA09F847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C6AC4CF-DBEC-4478-8151-E422B10F915D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C6AC4CF-DBEC-4478-8151-E422B10F915D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C6AC4CF-DBEC-4478-8151-E422B10F915D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C6AC4CF-DBEC-4478-8151-E422B10F915D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
