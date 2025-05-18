@@ -1,0 +1,52 @@
+﻿@model IEnumerable<RepTrackWeb.Models.Exercise.ExerciseListItemViewModel>
+
+@{
+    ViewData["Title"] = "Exercises";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Exercise Library</h1>
+        <a asp-action="Create" class="btn btn-primary">Add Exercise</a>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text" id="searchExercise" class="form-control" placeholder="Search exercises...">
+                <button class="btn btn-outline-secondary" type="button">Search</button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select id="muscleGroupFilter" class="form-select">
+                <option value="">All Muscle Groups</option>
+                @foreach (var muscleGroup in Enum.GetValues(typeof(RepTrackDomain.Enums.MuscleGroup)))
+                {
+                    <option value="@muscleGroup">@muscleGroup</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@item.PrimaryMuscleGroupName</h6>
+                        <p class="card-text">Equipment: @(string.IsNullOrEmpty(item.EquipmentRequired) ? "None" : item.EquipmentRequired)</p>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            @if (!item.IsSystemExercise)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,42 @@
+﻿@model RepTrackWeb.Models.WorkoutSession.CreateWorkoutSessionViewModel
+
+@{
+    ViewData["Title"] = "New Workout";
+}
+
+<div class="container">
+    <h1>New Workout</h1>
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="SessionDate" class="form-label"></label>
+            <input asp-for="SessionDate" class="form-control" type="date" />
+            <span asp-validation-for="SessionDate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SessionType" class="form-label"></label>
+            <select asp-for="SessionType" asp-items="Model.WorkoutTypes" class="form-select"></select>
+            <span asp-validation-for="SessionType" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Notes" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Create Workout</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
