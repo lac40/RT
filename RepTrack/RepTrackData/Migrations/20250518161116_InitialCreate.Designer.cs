@@ -12,7 +12,7 @@ using RepTrackData;
 namespace RepTrackData.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250516202603_InitialCreate")]
+    [Migration("20250518161116_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
