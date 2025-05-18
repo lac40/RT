@@ -32,6 +32,11 @@ namespace RepTrackWeb
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("RequireCoachRole", policy => policy.RequireRole("Coach", "Admin"));
+            });
 
             builder.Services.AddControllersWithViews();
 
