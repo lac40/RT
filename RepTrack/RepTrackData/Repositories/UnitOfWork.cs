@@ -12,6 +12,8 @@ namespace RepTrackData.Repositories
         private readonly ApplicationDbContext _context;
         private IWorkoutSessionRepository _workoutSessions;
         private IExerciseRepository _exercises;
+        private IWorkoutExerciseRepository _workoutExercises;
+        private IExerciseSetRepository _exerciseSets;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -23,6 +25,12 @@ namespace RepTrackData.Repositories
 
         public IExerciseRepository Exercises =>
             _exercises ??= new ExerciseRepository(_context);
+
+        public IWorkoutExerciseRepository WorkoutExercises =>
+            _workoutExercises ??= new WorkoutExerciseRepository(_context);
+
+        public IExerciseSetRepository ExerciseSets =>
+            _exerciseSets ??= new ExerciseSetRepository(_context);
 
         public async Task<int> CompleteAsync()
         {

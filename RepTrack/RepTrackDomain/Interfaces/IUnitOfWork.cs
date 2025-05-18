@@ -10,10 +10,9 @@ namespace RepTrackDomain.Interfaces
     {
         IWorkoutSessionRepository WorkoutSessions { get; }
         IExerciseRepository Exercises { get; }
+        IWorkoutExerciseRepository WorkoutExercises { get; }
+        IExerciseSetRepository ExerciseSets { get; }
 
-        /// <summary>
-        /// Saves all changes made in this context to the database
-        /// </summary>
         Task<int> CompleteAsync();
     }
 }
