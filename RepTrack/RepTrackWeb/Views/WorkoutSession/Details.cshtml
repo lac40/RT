@@ -39,7 +39,7 @@
 
             <h5 class="mt-3">
                 Exercises (@Model.Exercises.Count)
-                <a href="#" class="btn btn-sm btn-outline-primary float-end">Add Exercise</a>
+                <a asp-controller="WorkoutExercise" asp-action="Add" asp-route-workoutId="@Model.Id" class="btn btn-sm btn-outline-primary float-end">Add Exercise</a>
             </h5>
 
             @if (!Model.Exercises.Any())
@@ -76,6 +76,7 @@
                                                     <th>Reps</th>
                                                     <th>RPE</th>
                                                     <th>Status</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -94,7 +95,13 @@
                                                             else
                                                             {
                                                                 <span class="badge bg-warning">Not Completed</span>
+                                                                <form asp-controller="ExerciseSet" asp-action="Complete" asp-route-id="@set.Id" asp-route-workoutId="@Model.Id" method="post" class="d-inline">
+                                                                    <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                                                </form>
                                                             }
+                                                        </td>
+                                                        <td>
+                                                            <!-- Add edit/delete actions if needed -->
                                                         </td>
                                                     </tr>
                                                 }
@@ -106,7 +113,7 @@
                                         <p>No sets recorded yet.</p>
                                     }
 
-                                    <button class="btn btn-sm btn-outline-primary">Add Set</button>
+                                    <a asp-controller="ExerciseSet" asp-action="Add" asp-route-workoutExerciseId="@exercise.Id" asp-route-workoutId="@Model.Id" class="btn btn-sm btn-outline-primary">Add Set</a>
                                 </div>
                             </div>
                         </div>

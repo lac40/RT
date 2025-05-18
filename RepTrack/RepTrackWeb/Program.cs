@@ -48,6 +48,7 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
+            builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
 
             builder.Services.AddResponseCompression(options =>
             {
