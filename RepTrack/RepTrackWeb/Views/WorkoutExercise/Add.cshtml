@@ -1,0 +1,45 @@
+﻿@model RepTrackWeb.Models.WorkoutExercise.AddExerciseViewModel
+
+@{
+    ViewData["Title"] = "Add Exercise to Workout";
+}
+
+<div class="container">
+    <h1>Add Exercise to Workout</h1>
+
+    <form asp-action="Add" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="WorkoutId" />
+
+        <div class="mb-3">
+            <label asp-for="ExerciseId" class="form-label"></label>
+            <select asp-for="ExerciseId" asp-items="Model.Exercises" class="form-select">
+                <option value="">-- Select Exercise --</option>
+            </select>
+            <span asp-validation-for="ExerciseId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="OrderInWorkout" class="form-label"></label>
+            <input asp-for="OrderInWorkout" class="form-control" />
+            <span asp-validation-for="OrderInWorkout" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Notes" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Add Exercise</button>
+            <a asp-controller="WorkoutSession" asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

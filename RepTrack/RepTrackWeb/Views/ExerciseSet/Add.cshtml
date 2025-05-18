@@ -1,0 +1,61 @@
+﻿@model RepTrackWeb.Models.ExerciseSet.AddSetViewModel
+
+@{
+    ViewData["Title"] = "Add Set";
+}
+
+<div class="container">
+    <h1>Add Set</h1>
+
+    <form asp-action="Add" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="WorkoutExerciseId" />
+        <input type="hidden" asp-for="WorkoutId" />
+
+        <div class="mb-3">
+            <label asp-for="Type" class="form-label"></label>
+            <select asp-for="Type" asp-items="Model.SetTypes" class="form-select"></select>
+            <span asp-validation-for="Type" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Weight" class="form-label"></label>
+            <input asp-for="Weight" class="form-control" />
+            <span asp-validation-for="Weight" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Repetitions" class="form-label"></label>
+            <input asp-for="Repetitions" class="form-control" />
+            <span asp-validation-for="Repetitions" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="RPE" class="form-label"></label>
+            <input asp-for="RPE" class="form-control" />
+            <span asp-validation-for="RPE" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="OrderInExercise" class="form-label"></label>
+            <input asp-for="OrderInExercise" class="form-control" />
+            <span asp-validation-for="OrderInExercise" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsCompleted" class="form-check-input" />
+            <label asp-for="IsCompleted" class="form-check-label"></label>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Add Set</button>
+            <a asp-controller="WorkoutSession" asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
