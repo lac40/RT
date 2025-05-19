@@ -1,8 +1,87 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Welcome to RepTrack";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold text-primary">Track Your Progress. Achieve Your Goals.</h1>
+            <p class="lead">RepTrack is a comprehensive workout tracking application designed for serious fitness enthusiasts who want to monitor their progress and maximize their gains.</p>
+
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <div class="mt-4">
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg me-2">Get Started</a>
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-lg">Sign In</a>
+                </div>
+            }
+            else
+            {
+                <div class="mt-4">
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                </div>
+            }
+        </div>
+        <div class="col-lg-6 mt-5 mt-lg-0 text-center">
+            @* <img src="~/images/workout-tracker.svg" alt="Workout Tracking" class="img-fluid" style="max-height: 400px;" onerror="this.src='https://via.placeholder.com/600x400?text=RepTrack'"> *@
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="fw-bold mb-4">Key Features</h2>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-dumbbell fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Workout Tracking</h3>
+                    <p class="card-text">Log your exercises, sets, reps, and weight with an easy-to-use interface designed for the gym.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Progress Analytics</h3>
+                    <p class="card-text">Visualize your strength gains, volume progress, and workout frequency with detailed charts.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Goal Setting</h3>
+                    <p class="card-text">Set and track personalized fitness goals for specific exercises or overall performance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row py-5 bg-light rounded">
+        <div class="col-12 text-center">
+            <h2 class="fw-bold mb-4">Start Tracking Your Fitness Journey Today</h2>
+            <p class="lead mb-4">Join thousands of fitness enthusiasts who use RepTrack to optimize their workouts and achieve their goals.</p>
+
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg">Create Free Account</a>
+            }
+            else
+            {
+                <a asp-controller="WorkoutSession" asp-action="Create" class="btn btn-primary btn-lg">Log a Workout</a>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}

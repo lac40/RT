@@ -38,6 +38,23 @@ namespace RepTrackWeb.Controllers
             return View(viewModel);
         }
 
+        // GET: Exercise/Create
+        public IActionResult Create()
+        {
+            var viewModel = new CreateExerciseViewModel
+            {
+                MuscleGroups = Enum.GetValues(typeof(MuscleGroup))
+                    .Cast<MuscleGroup>()
+                    .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Text = m.ToString(),
+                        Value = ((int)m).ToString()
+                    }).ToList(),
+                SecondaryMuscleGroups = new List<int>()
+            };
+            return View(viewModel);
+        }
+
         // POST: Exercise/Create
         [HttpPost]
         [ValidateAntiForgeryToken]

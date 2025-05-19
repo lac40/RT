@@ -19,8 +19,6 @@ namespace RepTrackWeb.Mapping
 
             CreateMap<ExerciseDto, ExerciseListItemViewModel>();
             CreateMap<ExerciseDto, ExerciseDetailViewModel>();
-
-            // You can add more mappings as needed
         }
     }
 }
