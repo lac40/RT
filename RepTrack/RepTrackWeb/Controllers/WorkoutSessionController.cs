@@ -31,8 +31,8 @@ namespace RepTrackWeb.Controllers
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workouts = await _workoutService.GetUserWorkoutsAsync(userId);
-            var viewModels = _mapper.Map<List<WorkoutSessionListItemViewModel>>(workouts);
+            var workoutDtos = await _workoutService.GetUserWorkoutsAsync(userId);
+            var viewModels = _mapper.Map<List<WorkoutSessionListItemViewModel>>(workoutDtos);
 
             // Create paginated list
             var paginatedList = PaginatedList<WorkoutSessionListItemViewModel>.Create(viewModels, page, pageSize);
@@ -44,25 +44,8 @@ namespace RepTrackWeb.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
-            var viewModel = _mapper.Map<WorkoutSessionDetailViewModel>(workout);
-            return View(viewModel);
-        }
-
-        // GET: WorkoutSession/Create
-        public async Task<IActionResult> Create()
-        {
-            var viewModel = new CreateWorkoutSessionViewModel
-            {
-                SessionDate = DateTime.Now,
-                WorkoutTypes = Enum.GetValues(typeof(WorkoutType))
-                    .Cast<WorkoutType>()
-                    .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = t.ToString(),
-                        Value = ((int)t).ToString()
-                    }).ToList()
-            };
+            var workoutDto = await _workoutService.GetWorkoutByIdAsync(id, userId);
+            var viewModel = _mapper.Map<WorkoutSessionDetailViewModel>(workoutDto);
             return View(viewModel);
         }
 
@@ -74,13 +57,13 @@ namespace RepTrackWeb.Controllers
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var workout = await _workoutService.CreateWorkoutAsync(
+                var workoutDto = await _workoutService.CreateWorkoutAsync(
                     userId,
                     model.SessionDate,
                     model.SessionType,
                     model.Notes);
 
-                return RedirectToAction(nameof(Details), new { id = workout.Id });
+                return RedirectToAction(nameof(Details), new { id = workoutDto.Id });
             }
 
             // If we got this far, something failed, redisplay form
@@ -93,30 +76,6 @@ namespace RepTrackWeb.Controllers
                 }).ToList();
 
             return View(model);
-        }
-
-        // GET: WorkoutSession/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
-
-            var viewModel = new EditWorkoutSessionViewModel
-            {
-                Id = workout.Id,
-                SessionDate = workout.SessionDate,
-                SessionType = workout.SessionType,
-                Notes = workout.Notes,
-                WorkoutTypes = Enum.GetValues(typeof(WorkoutType))
-                    .Cast<WorkoutType>()
-                    .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = t.ToString(),
-                        Value = ((int)t).ToString()
-                    }).ToList()
-            };
-
-            return View(viewModel);
         }
 
         // POST: WorkoutSession/Edit/5
@@ -132,14 +91,14 @@ namespace RepTrackWeb.Controllers
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                await _workoutService.UpdateWorkoutAsync(
+                var workoutDto = await _workoutService.UpdateWorkoutAsync(
                     id,
                     model.SessionDate,
                     model.SessionType,
                     model.Notes,
                     userId);
 
-                return RedirectToAction(nameof(Details), new { id = model.Id });
+                return RedirectToAction(nameof(Details), new { id = workoutDto.Id });
             }
 
             // If we got this far, something failed, redisplay form
@@ -154,23 +113,13 @@ namespace RepTrackWeb.Controllers
             return View(model);
         }
 
-        // POST: WorkoutSession/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _workoutService.DeleteWorkoutAsync(id, userId);
-            return RedirectToAction(nameof(Index));
-        }
-
         // POST: WorkoutSession/Complete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Complete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _workoutService.CompleteWorkoutAsync(id, userId);
+            var workoutDto = await _workoutService.CompleteWorkoutAsync(id, userId);
             return RedirectToAction(nameof(Details), new { id });
         }
     }

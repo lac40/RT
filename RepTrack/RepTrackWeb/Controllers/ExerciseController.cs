@@ -25,33 +25,16 @@ namespace RepTrackWeb.Controllers
         // GET: Exercise
         public async Task<IActionResult> Index()
         {
-            var exercises = await _exerciseService.GetAllExercisesAsync();
-            var viewModels = _mapper.Map<List<ExerciseListItemViewModel>>(exercises);
+            var exerciseDtos = await _exerciseService.GetAllExercisesAsync();
+            var viewModels = _mapper.Map<List<ExerciseListItemViewModel>>(exerciseDtos);
             return View(viewModels);
         }
 
         // GET: Exercise/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            var exercise = await _exerciseService.GetExerciseByIdAsync(id);
-            var viewModel = _mapper.Map<ExerciseDetailViewModel>(exercise);
-            return View(viewModel);
-        }
-
-        // GET: Exercise/Create
-        public IActionResult Create()
-        {
-            var viewModel = new CreateExerciseViewModel
-            {
-                MuscleGroups = Enum.GetValues(typeof(MuscleGroup))
-                    .Cast<MuscleGroup>()
-                    .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = m.ToString(),
-                        Value = ((int)m).ToString()
-                    }).ToList(),
-                SecondaryMuscleGroups = new List<int>()
-            };
+            var exerciseDto = await _exerciseService.GetExerciseByIdAsync(id);
+            var viewModel = _mapper.Map<ExerciseDetailViewModel>(exerciseDto);
             return View(viewModel);
         }
 
@@ -67,7 +50,7 @@ namespace RepTrackWeb.Controllers
                     .Select(m => (MuscleGroup)m)
                     .ToList();
 
-                var exercise = await _exerciseService.CreateExerciseAsync(
+                var exerciseDto = await _exerciseService.CreateExerciseAsync(
                     model.Name,
                     model.PrimaryMuscleGroup,
                     userId,
@@ -75,7 +58,7 @@ namespace RepTrackWeb.Controllers
                     model.EquipmentRequired,
                     secondaryMuscleGroups);
 
-                return RedirectToAction(nameof(Details), new { id = exercise.Id });
+                return RedirectToAction(nameof(Details), new { id = exerciseDto.Id });
             }
 
             // If we got this far, something failed, redisplay form
@@ -88,30 +71,6 @@ namespace RepTrackWeb.Controllers
                 }).ToList();
 
             return View(model);
-        }
-
-        // GET: Exercise/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var exercise = await _exerciseService.GetExerciseByIdAsync(id);
-
-            var viewModel = new EditExerciseViewModel
-            {
-                Id = exercise.Id,
-                Name = exercise.Name,
-                Description = exercise.Description,
-                PrimaryMuscleGroup = exercise.PrimaryMuscleGroup,
-                EquipmentRequired = exercise.EquipmentRequired,
-                MuscleGroups = Enum.GetValues(typeof(MuscleGroup))
-                    .Cast<MuscleGroup>()
-                    .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = m.ToString(),
-                        Value = ((int)m).ToString()
-                    }).ToList()
-            };
-
-            return View(viewModel);
         }
 
         // POST: Exercise/Edit/5
@@ -127,7 +86,7 @@ namespace RepTrackWeb.Controllers
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                await _exerciseService.UpdateExerciseAsync(
+                var exerciseDto = await _exerciseService.UpdateExerciseAsync(
                     id,
                     model.Name,
                     model.Description,
@@ -135,7 +94,7 @@ namespace RepTrackWeb.Controllers
                     model.EquipmentRequired,
                     userId);
 
-                return RedirectToAction(nameof(Details), new { id = model.Id });
+                return RedirectToAction(nameof(Details), new { id = exerciseDto.Id });
             }
 
             // If we got this far, something failed, redisplay form

@@ -8,7 +8,10 @@ namespace RepTrackBusiness.Mapper
     {
         public MappingProfile()
         {
-            // Map from domain models to DTOs only
+            // Map from domain models to DTOs
+            CreateMap<Exercise, ExerciseDto>()
+                .ForMember(dest => dest.SecondaryMuscleGroups, opt => opt.MapFrom(src => src.SecondaryMuscleGroups));
+
             CreateMap<WorkoutSession, WorkoutSessionDto>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags));
 
@@ -16,9 +19,6 @@ namespace RepTrackBusiness.Mapper
                 .ForMember(dest => dest.ExerciseName, opt => opt.MapFrom(src => src.Exercise.Name));
 
             CreateMap<ExerciseSet, ExerciseSetDto>();
-
-            CreateMap<Exercise, ExerciseDto>()
-                .ForMember(dest => dest.SecondaryMuscleGroups, opt => opt.MapFrom(src => src.SecondaryMuscleGroups));
         }
     }
 }

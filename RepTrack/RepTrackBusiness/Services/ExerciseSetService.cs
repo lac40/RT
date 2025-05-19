@@ -1,22 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using RepTrackBusiness.Interfaces;
 using RepTrackCommon.Exceptions;
 using RepTrackDomain.Interfaces;
 using RepTrackDomain.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Services
 {
     public class ExerciseSetService : IExerciseSetService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public ExerciseSetService(IUnitOfWork unitOfWork)
+        public ExerciseSetService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task AddSetToExerciseAsync(int workoutExerciseId, AddExerciseSetModel model)
