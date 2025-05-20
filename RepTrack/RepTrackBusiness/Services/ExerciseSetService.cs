@@ -1,12 +1,11 @@
-﻿using AutoMapper;
-using RepTrackBusiness.Interfaces;
+﻿using RepTrackBusiness.Interfaces;
 using RepTrackCommon.Exceptions;
+using RepTrackDomain.Enums;
 using RepTrackDomain.Interfaces;
 using RepTrackDomain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Services
@@ -14,15 +13,14 @@ namespace RepTrackBusiness.Services
     public class ExerciseSetService : IExerciseSetService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
 
-        public ExerciseSetService(IUnitOfWork unitOfWork, IMapper mapper)
+        public ExerciseSetService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
-        public async Task AddSetToExerciseAsync(int workoutExerciseId, AddExerciseSetModel model)
+        public async Task<ExerciseSet> AddSetToExerciseAsync(int workoutExerciseId, SetType type, decimal weight,
+            int repetitions, decimal rpe, int orderInExercise, bool isCompleted)
         {
             // Get the workout exercise
             var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdWithWorkoutAsync(workoutExerciseId);
@@ -30,36 +28,48 @@ namespace RepTrackBusiness.Services
             if (workoutExercise == null)
                 throw new NotFoundException($"Workout exercise with ID {workoutExerciseId} was not found.");
 
+            // If order is 0 or not specified, automatically position at the end
+            if (orderInExercise <= 0)
+            {
+                var existingSets = await _unitOfWork.ExerciseSets.GetByWorkoutExerciseIdAsync(workoutExerciseId);
+                orderInExercise = existingSets.Count() + 1;
+            }
+
             // Create a new set
             var set = new ExerciseSet(
                 workoutExerciseId,
-                model.Type,
-                model.Weight,
-                model.Repetitions,
-                model.RPE,
-                model.OrderInExercise);
+                type,
+                weight,
+                repetitions,
+                rpe,
+                orderInExercise);
 
-            if (model.IsCompleted)
+            if (isCompleted)
                 set.MarkAsCompleted();
 
             // Add the set to the database
             await _unitOfWork.ExerciseSets.AddAsync(set);
             await _unitOfWork.CompleteAsync();
+
+            return set;
         }
 
-        public async Task UpdateSetAsync(int setId, AddExerciseSetModel model)
+        public async Task<ExerciseSet> UpdateSetAsync(int setId, SetType type, decimal weight,
+            int repetitions, decimal rpe, int orderInExercise, bool isCompleted)
         {
             var set = await _unitOfWork.ExerciseSets.GetByIdAsync(setId);
 
             if (set == null)
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
-            set.Update(model.Type, model.Weight, model.Repetitions, model.RPE, model.OrderInExercise);
+            set.Update(type, weight, repetitions, rpe, orderInExercise);
 
-            if (model.IsCompleted && !set.IsCompleted)
+            if (isCompleted && !set.IsCompleted)
                 set.MarkAsCompleted();
 
             await _unitOfWork.CompleteAsync();
+
+            return set;
         }
 
         public async Task DeleteSetAsync(int setId)
@@ -73,7 +83,7 @@ namespace RepTrackBusiness.Services
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task CompleteSetAsync(int setId)
+        public async Task<ExerciseSet> CompleteSetAsync(int setId)
         {
             var set = await _unitOfWork.ExerciseSets.GetByIdAsync(setId);
 
@@ -81,6 +91,35 @@ namespace RepTrackBusiness.Services
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
             set.MarkAsCompleted();
+            await _unitOfWork.CompleteAsync();
+
+            return set;
+        }
+
+        public async Task ReorderSetsAsync(int workoutExerciseId, List<int> setIds)
+        {
+            var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdAsync(workoutExerciseId);
+            if (workoutExercise == null)
+                throw new NotFoundException($"Workout exercise with ID {workoutExerciseId} was not found.");
+
+            var sets = await _unitOfWork.ExerciseSets.GetByWorkoutExerciseIdAsync(workoutExerciseId);
+
+            // Verify that all set IDs belong to the workout exercise
+            foreach (var setId in setIds)
+            {
+                if (!sets.Any(s => s.Id == setId))
+                {
+                    throw new ArgumentException($"Set ID {setId} does not belong to workout exercise {workoutExerciseId}");
+                }
+            }
+
+            // Update the order
+            for (int i = 0; i < setIds.Count; i++)
+            {
+                var set = sets.First(s => s.Id == setIds[i]);
+                set.OrderInExercise = i + 1; // Start ordering from 1
+            }
+
             await _unitOfWork.CompleteAsync();
         }
     }

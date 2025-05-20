@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using RepTrackBusiness.DTOs;
-using RepTrackBusiness.Interfaces;
+﻿using RepTrackBusiness.Interfaces;
 using RepTrackCommon.Exceptions;
 using RepTrackDomain.Enums;
 using RepTrackDomain.Interfaces;
@@ -8,7 +6,6 @@ using RepTrackDomain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Services
@@ -16,15 +13,13 @@ namespace RepTrackBusiness.Services
     public class WorkoutSessionService : IWorkoutSessionService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
 
-        public WorkoutSessionService(IUnitOfWork unitOfWork, IMapper mapper)
+        public WorkoutSessionService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
-        public async Task<WorkoutSessionDto> CreateWorkoutAsync(string userId, DateTime sessionDate, WorkoutType sessionType, string notes)
+        public async Task<WorkoutSession> CreateWorkoutAsync(string userId, DateTime sessionDate, WorkoutType sessionType, string notes)
         {
             var workout = new WorkoutSession(userId, sessionDate, sessionType)
             {
@@ -34,10 +29,10 @@ namespace RepTrackBusiness.Services
             await _unitOfWork.WorkoutSessions.AddAsync(workout);
             await _unitOfWork.CompleteAsync();
 
-            return _mapper.Map<WorkoutSessionDto>(workout);
+            return workout;
         }
 
-        public async Task<WorkoutSessionDto> GetWorkoutByIdAsync(int workoutId, string userId)
+        public async Task<WorkoutSession> GetWorkoutByIdAsync(int workoutId, string userId)
         {
             var workout = await _unitOfWork.WorkoutSessions.GetWorkoutWithDetailsAsync(workoutId);
 
@@ -47,23 +42,22 @@ namespace RepTrackBusiness.Services
             if (workout.UserId != userId)
                 throw new AccessDeniedException("You do not have permission to access this workout.");
 
-            return _mapper.Map<WorkoutSessionDto>(workout);
+            return workout;
         }
 
-        public async Task<IEnumerable<WorkoutSessionDto>> GetUserWorkoutsAsync(string userId)
+        public async Task<IEnumerable<WorkoutSession>> GetUserWorkoutsAsync(string userId)
         {
-            var workouts = await _unitOfWork.WorkoutSessions.GetUserWorkoutsAsync(userId);
-            return _mapper.Map<IEnumerable<WorkoutSessionDto>>(workouts);
+            return await _unitOfWork.WorkoutSessions.GetUserWorkoutsAsync(userId);
         }
 
-        public async Task<WorkoutSessionDto> UpdateWorkoutAsync(int workoutId, DateTime sessionDate, WorkoutType sessionType, string notes, string userId)
+        public async Task<WorkoutSession> UpdateWorkoutAsync(int workoutId, DateTime sessionDate, WorkoutType sessionType, string notes, string userId)
         {
             var workout = await GetWorkoutEntityByIdAsync(workoutId, userId);
 
             workout.Update(sessionDate, sessionType, notes);
             await _unitOfWork.CompleteAsync();
 
-            return _mapper.Map<WorkoutSessionDto>(workout);
+            return workout;
         }
 
         public async Task DeleteWorkoutAsync(int workoutId, string userId)
@@ -74,14 +68,14 @@ namespace RepTrackBusiness.Services
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task<WorkoutSessionDto> CompleteWorkoutAsync(int workoutId, string userId)
+        public async Task<WorkoutSession> CompleteWorkoutAsync(int workoutId, string userId)
         {
             var workout = await GetWorkoutEntityByIdAsync(workoutId, userId);
 
             workout.MarkAsCompleted();
             await _unitOfWork.CompleteAsync();
 
-            return _mapper.Map<WorkoutSessionDto>(workout);
+            return workout;
         }
 
         public async Task AddExerciseToWorkoutAsync(int workoutId, int exerciseId, int orderInWorkout, string notes, string userId)
@@ -141,6 +135,29 @@ namespace RepTrackBusiness.Services
 
             // Remove the workout exercise
             _unitOfWork.WorkoutExercises.Remove(workoutExercise);
+            await _unitOfWork.CompleteAsync();
+        }
+
+        public async Task ReorderExercisesAsync(int workoutId, List<int> exerciseIds, string userId)
+        {
+            var workout = await GetWorkoutEntityByIdAsync(workoutId, userId);
+
+            // Verify that all exercise IDs belong to the workout
+            foreach (var exerciseId in exerciseIds)
+            {
+                if (!workout.Exercises.Any(e => e.Id == exerciseId))
+                {
+                    throw new ArgumentException($"Exercise ID {exerciseId} does not belong to workout {workoutId}");
+                }
+            }
+
+            // Update the order
+            for (int i = 0; i < exerciseIds.Count; i++)
+            {
+                var exercise = workout.Exercises.First(e => e.Id == exerciseIds[i]);
+                exercise.OrderInWorkout = i;
+            }
+
             await _unitOfWork.CompleteAsync();
         }
 
