@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RepTrackDomain.Enums;
+﻿using RepTrackDomain.Enums;
 using RepTrackDomain.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Interfaces
 {
@@ -13,12 +10,14 @@ namespace RepTrackBusiness.Interfaces
         /// <summary>
         /// Adds a set to a workout exercise
         /// </summary>
-        Task AddSetToExerciseAsync(int workoutExerciseId, AddExerciseSetModel model);
+        Task<ExerciseSet> AddSetToExerciseAsync(int workoutExerciseId, SetType type, decimal weight,
+            int repetitions, decimal rpe, int orderInExercise, bool isCompleted);
 
         /// <summary>
         /// Updates an existing set
         /// </summary>
-        Task UpdateSetAsync(int setId, AddExerciseSetModel model);
+        Task<ExerciseSet> UpdateSetAsync(int setId, SetType type, decimal weight,
+            int repetitions, decimal rpe, int orderInExercise, bool isCompleted);
 
         /// <summary>
         /// Deletes a set
@@ -28,16 +27,11 @@ namespace RepTrackBusiness.Interfaces
         /// <summary>
         /// Marks a set as completed
         /// </summary>
-        Task CompleteSetAsync(int setId);
-    }
+        Task<ExerciseSet> CompleteSetAsync(int setId);
 
-    public class AddExerciseSetModel
-    {
-        public SetType Type { get; set; }
-        public decimal Weight { get; set; }
-        public int Repetitions { get; set; }
-        public decimal RPE { get; set; }
-        public int OrderInExercise { get; set; }
-        public bool IsCompleted { get; set; }
+        /// <summary>
+        /// Reorders sets in a workout exercise
+        /// </summary>
+        Task ReorderSetsAsync(int workoutExerciseId, List<int> setIds);
     }
 }
