@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RepTrackBusiness.DTOs;
 using RepTrackBusiness.Interfaces;
 using RepTrackDomain.Enums;
 using RepTrackWeb.Models.Pagination;
 using RepTrackWeb.Models.WorkoutSession;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace RepTrackWeb.Controllers
 {
@@ -31,8 +33,8 @@ namespace RepTrackWeb.Controllers
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workoutDtos = await _workoutService.GetUserWorkoutsAsync(userId);
-            var viewModels = _mapper.Map<List<WorkoutSessionListItemViewModel>>(workoutDtos);
+            var workouts = await _workoutService.GetUserWorkoutsAsync(userId);
+            var viewModels = _mapper.Map<List<WorkoutSessionListItemViewModel>>(workouts);
 
             // Create paginated list
             var paginatedList = PaginatedList<WorkoutSessionListItemViewModel>.Create(viewModels, page, pageSize);
@@ -44,14 +46,21 @@ namespace RepTrackWeb.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workoutDto = await _workoutService.GetWorkoutByIdAsync(id, userId);
-            var viewModel = _mapper.Map<WorkoutSessionDetailViewModel>(workoutDto);
+            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
+            var viewModel = _mapper.Map<WorkoutSessionDetailViewModel>(workout);
             return View(viewModel);
         }
 
         // GET: WorkoutSession/Create
-
-        // implement GET method for creating a workout session
+        public IActionResult Create()
+        {
+            var model = new CreateWorkoutSessionViewModel
+            {
+                SessionDate = System.DateTime.Now,
+                WorkoutTypes = GetWorkoutTypeSelectList()
+            };
+            return View(model);
+        }
 
         // POST: WorkoutSession/Create
         [HttpPost]
@@ -61,23 +70,34 @@ namespace RepTrackWeb.Controllers
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var workoutDto = await _workoutService.CreateWorkoutAsync(
+                var workout = await _workoutService.CreateWorkoutAsync(
                     userId,
                     model.SessionDate,
                     model.SessionType,
                     model.Notes);
 
-                return RedirectToAction(nameof(Details), new { id = workoutDto.Id });
+                return RedirectToAction(nameof(Details), new { id = workout.Id });
             }
 
             // If we got this far, something failed, redisplay form
-            model.WorkoutTypes = Enum.GetValues(typeof(WorkoutType))
-                .Cast<WorkoutType>()
-                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                {
-                    Text = t.ToString(),
-                    Value = ((int)t).ToString()
-                }).ToList();
+            model.WorkoutTypes = GetWorkoutTypeSelectList();
+            return View(model);
+        }
+
+        // GET: WorkoutSession/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
+
+            var model = new EditWorkoutSessionViewModel
+            {
+                Id = workout.Id,
+                SessionDate = workout.SessionDate,
+                SessionType = workout.SessionType,
+                Notes = workout.Notes,
+                WorkoutTypes = GetWorkoutTypeSelectList()
+            };
 
             return View(model);
         }
@@ -95,25 +115,18 @@ namespace RepTrackWeb.Controllers
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var workoutDto = await _workoutService.UpdateWorkoutAsync(
+                var workout = await _workoutService.UpdateWorkoutAsync(
                     id,
                     model.SessionDate,
                     model.SessionType,
                     model.Notes,
                     userId);
 
-                return RedirectToAction(nameof(Details), new { id = workoutDto.Id });
+                return RedirectToAction(nameof(Details), new { id = workout.Id });
             }
 
             // If we got this far, something failed, redisplay form
-            model.WorkoutTypes = Enum.GetValues(typeof(WorkoutType))
-                .Cast<WorkoutType>()
-                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                {
-                    Text = t.ToString(),
-                    Value = ((int)t).ToString()
-                }).ToList();
-
+            model.WorkoutTypes = GetWorkoutTypeSelectList();
             return View(model);
         }
 
@@ -123,8 +136,30 @@ namespace RepTrackWeb.Controllers
         public async Task<IActionResult> Complete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var workoutDto = await _workoutService.CompleteWorkoutAsync(id, userId);
+            var workout = await _workoutService.CompleteWorkoutAsync(id, userId);
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: WorkoutSession/ReorderExercises
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReorderExercises(int workoutId, List<int> exerciseIds)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            await _workoutService.ReorderExercisesAsync(workoutId, exerciseIds, userId);
+            return Ok();
+        }
+
+        // Helper method to get a select list of workout types
+        private List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> GetWorkoutTypeSelectList()
+        {
+            return System.Enum.GetValues(typeof(WorkoutType))
+                .Cast<WorkoutType>()
+                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = t.ToString(),
+                    Value = ((int)t).ToString()
+                }).ToList();
         }
     }
 }

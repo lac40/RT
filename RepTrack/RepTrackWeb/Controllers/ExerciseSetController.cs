@@ -3,7 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using RepTrackBusiness.Interfaces;
 using RepTrackDomain.Enums;
 using RepTrackWeb.Models.ExerciseSet;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using AutoMapper;
 
 namespace RepTrackWeb.Controllers
 {
@@ -12,13 +16,16 @@ namespace RepTrackWeb.Controllers
     {
         private readonly IWorkoutSessionService _workoutService;
         private readonly IExerciseSetService _exerciseSetService;
+        private readonly IMapper _mapper;
 
         public ExerciseSetController(
             IWorkoutSessionService workoutService,
-            IExerciseSetService exerciseSetService)
+            IExerciseSetService exerciseSetService,
+            IMapper mapper)
         {
             _workoutService = workoutService;
             _exerciseSetService = exerciseSetService;
+            _mapper = mapper;
         }
 
         // GET: ExerciseSet/Add/5 (5 is the workout exercise ID)
@@ -28,21 +35,20 @@ namespace RepTrackWeb.Controllers
 
             // Verify workout exists and user can access it
             var workout = await _workoutService.GetWorkoutByIdAsync(workoutId, userId);
-            if (workout == null)
+
+            // Find the exercise in the workout
+            var workoutExercise = workout.Exercises.FirstOrDefault(e => e.Id == workoutExerciseId);
+            if (workoutExercise == null)
                 return NotFound();
 
             var model = new AddSetViewModel
             {
                 WorkoutExerciseId = workoutExerciseId,
                 WorkoutId = workoutId,
-                SetTypes = Enum.GetValues(typeof(SetType))
-                    .Cast<SetType>()
-                    .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = t.ToString(),
-                        Value = ((int)t).ToString()
-                    }).ToList(),
-                OrderInExercise = 1 // Default order
+                ExerciseName = workoutExercise.Exercise.Name,
+                SetTypes = GetSetTypeSelectList(),
+                OrderInExercise = workout.Exercises
+                    .FirstOrDefault(e => e.Id == workoutExerciseId)?.Sets.Count + 1 ?? 1 // Default to next position
             };
 
             return View(model);
@@ -57,28 +63,18 @@ namespace RepTrackWeb.Controllers
             {
                 await _exerciseSetService.AddSetToExerciseAsync(
                     model.WorkoutExerciseId,
-                    new AddExerciseSetModel
-                    {
-                        Type = model.Type,
-                        Weight = model.Weight,
-                        Repetitions = model.Repetitions,
-                        RPE = model.RPE,
-                        OrderInExercise = model.OrderInExercise,
-                        IsCompleted = model.IsCompleted
-                    });
+                    model.Type,
+                    model.Weight,
+                    model.Repetitions,
+                    model.RPE,
+                    model.OrderInExercise,
+                    model.IsCompleted);
 
                 return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
             }
 
             // If we got this far, something failed, redisplay form
-            model.SetTypes = Enum.GetValues(typeof(SetType))
-                .Cast<SetType>()
-                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                {
-                    Text = t.ToString(),
-                    Value = ((int)t).ToString()
-                }).ToList();
-
+            model.SetTypes = GetSetTypeSelectList();
             return View(model);
         }
 
@@ -89,33 +85,31 @@ namespace RepTrackWeb.Controllers
 
             // Verify workout exists and user can access it
             var workout = await _workoutService.GetWorkoutByIdAsync(workoutId, userId);
-            if (workout == null)
-                return NotFound();
 
-            // Get the set from the workout
-            var exercise = workout.Exercises.SelectMany(e => e.Sets)
+            // Find the set in the workout
+            var exerciseSet = workout.Exercises
+                .SelectMany(e => e.Sets)
                 .FirstOrDefault(s => s.Id == id);
 
-            if (exercise == null)
+            if (exerciseSet == null)
                 return NotFound();
+
+            // Find the parent exercise
+            var workoutExercise = workout.Exercises
+                .FirstOrDefault(e => e.Id == exerciseSet.WorkoutExerciseId);
 
             var model = new EditSetViewModel
             {
                 Id = id,
                 WorkoutId = workoutId,
-                Type = exercise.Type,
-                Weight = exercise.Weight,
-                Repetitions = exercise.Repetitions,
-                RPE = exercise.RPE,
-                OrderInExercise = exercise.OrderInExercise,
-                IsCompleted = exercise.IsCompleted,
-                SetTypes = Enum.GetValues(typeof(SetType))
-                    .Cast<SetType>()
-                    .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                    {
-                        Text = t.ToString(),
-                        Value = ((int)t).ToString()
-                    }).ToList()
+                ExerciseName = workoutExercise?.Exercise.Name,
+                Type = exerciseSet.Type,
+                Weight = exerciseSet.Weight,
+                Repetitions = exerciseSet.Repetitions,
+                RPE = exerciseSet.RPE,
+                OrderInExercise = exerciseSet.OrderInExercise,
+                IsCompleted = exerciseSet.IsCompleted,
+                SetTypes = GetSetTypeSelectList()
             };
 
             return View(model);
@@ -130,28 +124,18 @@ namespace RepTrackWeb.Controllers
             {
                 await _exerciseSetService.UpdateSetAsync(
                     model.Id,
-                    new AddExerciseSetModel
-                    {
-                        Type = model.Type,
-                        Weight = model.Weight,
-                        Repetitions = model.Repetitions,
-                        RPE = model.RPE,
-                        OrderInExercise = model.OrderInExercise,
-                        IsCompleted = model.IsCompleted
-                    });
+                    model.Type,
+                    model.Weight,
+                    model.Repetitions,
+                    model.RPE,
+                    model.OrderInExercise,
+                    model.IsCompleted);
 
                 return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
             }
 
             // If we got this far, something failed, redisplay form
-            model.SetTypes = Enum.GetValues(typeof(SetType))
-                .Cast<SetType>()
-                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-                {
-                    Text = t.ToString(),
-                    Value = ((int)t).ToString()
-                }).ToList();
-
+            model.SetTypes = GetSetTypeSelectList();
             return View(model);
         }
 
@@ -171,6 +155,27 @@ namespace RepTrackWeb.Controllers
         {
             await _exerciseSetService.CompleteSetAsync(id);
             return RedirectToAction("Details", "WorkoutSession", new { id = workoutId });
+        }
+
+        // POST: ExerciseSet/Reorder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reorder(int workoutExerciseId, List<int> setIds)
+        {
+            await _exerciseSetService.ReorderSetsAsync(workoutExerciseId, setIds);
+            return Ok();
+        }
+
+        // Helper method to get a select list of set types
+        private List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> GetSetTypeSelectList()
+        {
+            return System.Enum.GetValues(typeof(SetType))
+                .Cast<SetType>()
+                .Select(t => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = t.ToString(),
+                    Value = ((int)t).ToString()
+                }).ToList();
         }
     }
 }
