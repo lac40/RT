@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RepTrackBusiness\RepTrackBusiness.csproj" />
     <ProjectReference Include="..\RepTrackCommon\RepTrackCommon.csproj" />
+    <ProjectReference Include="..\RepTrackDomain\RepTrackDomain.csproj" />
   </ItemGroup>
 
 </Project>
