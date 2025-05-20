@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using RepTrackBusiness.DTOs;
+using RepTrackDomain.Models;
 using RepTrackWeb.Models.Exercise;
 using RepTrackWeb.Models.WorkoutSession;
 
@@ -9,16 +9,17 @@ namespace RepTrackWeb.Mapping
     {
         public ViewModelMappingProfile()
         {
-            // Map from DTOs to view models
-            CreateMap<WorkoutSessionDto, WorkoutSessionListItemViewModel>()
+            // Map from domain models to view models
+            CreateMap<WorkoutSession, WorkoutSessionListItemViewModel>()
                 .ForMember(dest => dest.ExerciseCount, opt => opt.MapFrom(src => src.Exercises.Count));
 
-            CreateMap<WorkoutSessionDto, WorkoutSessionDetailViewModel>();
-            CreateMap<WorkoutExerciseDto, WorkoutSessionDetailViewModel.ExerciseViewModel>();
-            CreateMap<ExerciseSetDto, WorkoutSessionDetailViewModel.SetViewModel>();
+            CreateMap<WorkoutSession, WorkoutSessionDetailViewModel>();
+            CreateMap<WorkoutExercise, WorkoutSessionDetailViewModel.ExerciseViewModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Exercise.Name));
+            CreateMap<ExerciseSet, WorkoutSessionDetailViewModel.SetViewModel>();
 
-            CreateMap<ExerciseDto, ExerciseListItemViewModel>();
-            CreateMap<ExerciseDto, ExerciseDetailViewModel>();
+            CreateMap<Exercise, ExerciseListItemViewModel>();
+            CreateMap<Exercise, ExerciseDetailViewModel>();
         }
     }
 }
