@@ -13,7 +13,7 @@ namespace RepTrackBusiness.DTOs
         public int Id { get; set; }
         public DateTime SessionDate { get; set; }
         public WorkoutType SessionType { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
         public bool IsCompleted { get; set; }
         public ICollection<string> Tags { get; set; } = new List<string>();
         public ICollection<WorkoutExerciseDto> Exercises { get; set; } = new List<WorkoutExerciseDto>();

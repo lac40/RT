@@ -49,6 +49,10 @@ namespace RepTrackWeb.Controllers
             return View(viewModel);
         }
 
+        // GET: WorkoutSession/Create
+
+        // implement GET method for creating a workout session
+
         // POST: WorkoutSession/Create
         [HttpPost]
         [ValidateAntiForgeryToken]

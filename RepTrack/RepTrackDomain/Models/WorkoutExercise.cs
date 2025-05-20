@@ -31,7 +31,7 @@ namespace RepTrackDomain.Models
         /// <summary>
         /// Notes about this specific exercise performance
         /// </summary>
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         /// <summary>
         /// Navigation property to the workout session

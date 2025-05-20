@@ -34,7 +34,7 @@ namespace RepTrackDomain.Models
         /// <summary>
         /// Additional notes about the workout
         /// </summary>
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         /// <summary>
         /// Whether the workout has been completed

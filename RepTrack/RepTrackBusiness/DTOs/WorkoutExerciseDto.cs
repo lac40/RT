@@ -12,7 +12,7 @@ namespace RepTrackBusiness.DTOs
         public int ExerciseId { get; set; }
         public string ExerciseName { get; set; }
         public int OrderInWorkout { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
         public ICollection<ExerciseSetDto> Sets { get; set; } = new List<ExerciseSetDto>();
     }
 }
