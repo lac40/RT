@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using RepTrackDomain.Enums;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace RepTrackWeb.Models.ExerciseSet
@@ -9,6 +10,9 @@ namespace RepTrackWeb.Models.ExerciseSet
         public int Id { get; set; }
 
         public int WorkoutId { get; set; }
+
+        [Display(Name = "Exercise")]
+        public string ExerciseName { get; set; }
 
         [Required]
         [Display(Name = "Set Type")]
