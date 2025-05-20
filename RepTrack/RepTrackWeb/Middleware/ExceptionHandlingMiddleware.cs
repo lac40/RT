@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using RepTrackCommon.Exceptions;
+using System;
 using System.Net;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace RepTrackWeb.Middleware
 {
@@ -34,39 +36,91 @@ namespace RepTrackWeb.Middleware
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            _logger.LogError(exception, "An unhandled exception occurred.");
+            _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
-            HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
-            string message = "An unexpected error occurred. Please try again later.";
+            var statusCode = HttpStatusCode.InternalServerError;
+            var message = "An unexpected error occurred. Please try again later.";
+            var redirectUrl = string.Empty;
 
             // Custom exception handling
-            if (exception is NotFoundException)
+            switch (exception)
             {
-                statusCode = HttpStatusCode.NotFound;
-                message = exception.Message;
+                case NotFoundException notFoundEx:
+                    statusCode = HttpStatusCode.NotFound;
+                    message = notFoundEx.Message;
+                    redirectUrl = "/Home/Index";
+                    break;
+
+                case AccessDeniedException accessDeniedEx:
+                    statusCode = HttpStatusCode.Forbidden;
+                    message = accessDeniedEx.Message;
+                    redirectUrl = "/Home/Index";
+                    break;
+
+                case ArgumentException argEx:
+                    statusCode = HttpStatusCode.BadRequest;
+                    message = argEx.Message;
+                    break;
+
+                case InvalidOperationException invalidOpEx:
+                    statusCode = HttpStatusCode.BadRequest;
+                    message = invalidOpEx.Message;
+                    break;
             }
-            else if (exception is AccessDeniedException)
-            {
-                statusCode = HttpStatusCode.Forbidden;
-                message = exception.Message;
-            }
-            // Add other custom exception types as needed
 
             context.Response.StatusCode = (int)statusCode;
-            context.Response.ContentType = "application/json";
 
-            var response = new
+            // If it's an AJAX request, return JSON response
+            if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                Status = (int)statusCode,
-                Message = message,
-                // Only show detailed error info in development
-                Detail = _env.IsDevelopment() ? exception.ToString() : null
-            };
+                context.Response.ContentType = "application/json";
 
-            var jsonResponse = JsonSerializer.Serialize(response);
-            return context.Response.WriteAsync(jsonResponse);
+                var response = new
+                {
+                    Status = (int)statusCode,
+                    Message = message,
+                    // Only show detailed error info in development
+                    Detail = _env.IsDevelopment() ? exception.ToString() : null
+                };
+
+                var jsonResponse = JsonSerializer.Serialize(response);
+                await context.Response.WriteAsync(jsonResponse);
+            }
+            else
+            {
+                // For non-AJAX requests, add error to TempData and redirect
+                context.Response.ContentType = "text/html";
+
+                // If it's a GET request, redirect to error page or homepage
+                if (context.Request.Method == "GET")
+                {
+                    context.Response.Redirect(redirectUrl.Length > 0
+                        ? $"{redirectUrl}?error={System.Web.HttpUtility.UrlEncode(message)}"
+                        : $"/Home/Error?message={System.Web.HttpUtility.UrlEncode(message)}");
+                }
+                else
+                {
+                    // For POST requests, render an error view
+                    await context.Response.WriteAsync($@"
+                        <html>
+                        <head>
+                            <title>Error</title>
+                            <link rel='stylesheet' href='/lib/bootstrap/dist/css/bootstrap.min.css' />
+                        </head>
+                        <body>
+                            <div class='container mt-5'>
+                                <div class='alert alert-danger'>
+                                    <h4>Error</h4>
+                                    <p>{message}</p>
+                                    <a href='{(redirectUrl.Length > 0 ? redirectUrl : "/Home/Index")}' class='btn btn-primary'>Return to Home</a>
+                                </div>
+                            </div>
+                        </body>
+                        </html>");
+                }
+            }
         }
     }
 

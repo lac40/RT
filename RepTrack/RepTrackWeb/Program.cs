@@ -41,10 +41,16 @@ namespace RepTrackWeb
             builder.Services.AddControllersWithViews();
 
             // Register AutoMapper
-            builder.Services.AddAutoMapper(typeof(RepTrackBusiness.Mapper.MappingProfile), typeof(RepTrackWeb.Mapping.ViewModelMappingProfile));
+            builder.Services.AddAutoMapper(typeof(MappingProfile), typeof(RepTrackWeb.Mapping.ViewModelMappingProfile));
+
+            // Register repositories
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
+            builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
+            builder.Services.AddScoped<IWorkoutExerciseRepository, WorkoutExerciseRepository>();
+            builder.Services.AddScoped<IExerciseSetRepository, ExerciseSetRepository>();
 
             // Register services for dependency injection
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
@@ -68,7 +74,6 @@ namespace RepTrackWeb
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
