@@ -14,7 +14,7 @@
         <div class="col-md-4">
             <div class="input-group">
                 <input type="text" id="searchExercise" class="form-control" placeholder="Search exercises...">
-                <button class="btn btn-outline-secondary" type="button">Search</button>
+                <button class="btn btn-outline-secondary" type="button" id="searchButton">Search</button>
             </div>
         </div>
         <div class="col-md-4">
@@ -28,14 +28,18 @@
         </div>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="exerciseContainer">
         @foreach (var item in Model)
         {
-            <div class="col">
+            <div class="col exercise-item"
+                 data-muscle-group="@item.PrimaryMuscleGroupName"
+                 data-name="@item.Name">
                 <div class="card h-100">
+                    <div class="card-header">
+                        <span class="badge bg-primary">@item.PrimaryMuscleGroupName</span>
+                    </div>
                     <div class="card-body">
                         <h5 class="card-title">@item.Name</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@item.PrimaryMuscleGroupName</h6>
                         <p class="card-text">Equipment: @(string.IsNullOrEmpty(item.EquipmentRequired) ? "None" : item.EquipmentRequired)</p>
                         <div class="d-flex justify-content-between">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Details</a>
@@ -50,3 +54,35 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle search functionality
+            $('#searchButton').click(performSearch);
+            $('#searchExercise').keyup(function(e) {
+                if (e.keyCode === 13) {
+                    performSearch();
+                }
+            });
+
+            // Handle muscle group filtering
+            $('#muscleGroupFilter').change(performSearch);
+
+            function performSearch() {
+                const searchTerm = $('#searchExercise').val().toLowerCase();
+                const muscleGroup = $('#muscleGroupFilter').val();
+
+                $('.exercise-item').each(function() {
+                    const itemName = $(this).data('name').toLowerCase();
+                    const itemMuscleGroup = $(this).data('muscle-group');
+
+                    const matchesSearchTerm = searchTerm === '' || itemName.includes(searchTerm);
+                    const matchesMuscleGroup = muscleGroup === '' || itemMuscleGroup === muscleGroup;
+
+                    $(this).toggle(matchesSearchTerm && matchesMuscleGroup);
+                });
+            }
+        });
+    </script>
+}

@@ -5,41 +5,48 @@
 }
 
 <div class="container">
-    <h1>Add Set</h1>
+    <h1>Add Set for @Model.ExerciseName</h1>
 
     <form asp-action="Add" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <input type="hidden" asp-for="WorkoutExerciseId" />
         <input type="hidden" asp-for="WorkoutId" />
+        <input type="hidden" asp-for="ExerciseName" />
 
-        <div class="mb-3">
-            <label asp-for="Type" class="form-label"></label>
-            <select asp-for="Type" asp-items="Model.SetTypes" class="form-select"></select>
-            <span asp-validation-for="Type" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" asp-items="Model.SetTypes" class="form-select"></select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="OrderInExercise" class="form-label"></label>
+                <input asp-for="OrderInExercise" class="form-control" />
+                <span asp-validation-for="OrderInExercise" class="text-danger"></span>
+                <small class="text-muted">Leave as is to add at the end</small>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Weight" class="form-label"></label>
-            <input asp-for="Weight" class="form-control" />
-            <span asp-validation-for="Weight" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Repetitions" class="form-label"></label>
-            <input asp-for="Repetitions" class="form-control" />
-            <span asp-validation-for="Repetitions" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="RPE" class="form-label"></label>
-            <input asp-for="RPE" class="form-control" />
-            <span asp-validation-for="RPE" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="OrderInExercise" class="form-label"></label>
-            <input asp-for="OrderInExercise" class="form-control" />
-            <span asp-validation-for="OrderInExercise" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="Weight" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="Weight" class="form-control" />
+                    <span class="input-group-text">kg</span>
+                </div>
+                <span asp-validation-for="Weight" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="Repetitions" class="form-label"></label>
+                <input asp-for="Repetitions" class="form-control" />
+                <span asp-validation-for="Repetitions" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="RPE" class="form-label"></label>
+                <input asp-for="RPE" class="form-control" type="range" min="0" max="10" step="0.5" oninput="rpeOutput.value = this.value" />
+                <output id="rpeOutput">@Model.RPE</output>
+                <span asp-validation-for="RPE" class="text-danger"></span>
+            </div>
         </div>
 
         <div class="form-check mb-3">
@@ -47,9 +54,12 @@
             <label asp-for="IsCompleted" class="form-check-label"></label>
         </div>
 
-        <div class="mb-3">
+        <div class="d-flex justify-content-between">
             <button type="submit" class="btn btn-primary">Add Set</button>
-            <a asp-controller="WorkoutSession" asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+            <div>
+                <button type="submit" class="btn btn-success" name="addAnother" value="true">Add & New</button>
+                <a asp-controller="WorkoutSession" asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+            </div>
         </div>
     </form>
 </div>
@@ -58,4 +68,49 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        // Custom validation for RPE
+        $(document).ready(function() {
+            // Initialize RPE slider
+            const rpeSlider = document.querySelector('input[type="range"]');
+            const rpeOutput = document.getElementById('rpeOutput');
+            rpeOutput.value = rpeSlider.value;
+
+            // Add quick selector buttons for common weight and rep values
+            const weightInput = $('input[asp-for="Weight"]');
+            const repsInput = $('input[asp-for="Repetitions"]');
+
+            // Common weight presets
+            const weightPresets = [5, 10, 20, 30, 40, 60, 80, 100, 120];
+            const weightDiv = $('<div class="btn-group btn-group-sm mt-2 weight-presets"></div>');
+
+            weightPresets.forEach(function(weight) {
+                $('<button type="button" class="btn btn-outline-secondary"></button>')
+                    .text(weight)
+                    .click(function(e) {
+                        e.preventDefault();
+                        weightInput.val(weight);
+                    })
+                    .appendTo(weightDiv);
+            });
+
+            weightInput.after(weightDiv);
+
+            // Common rep presets
+            const repPresets = [1, 5, 8, 10, 12, 15, 20];
+            const repDiv = $('<div class="btn-group btn-group-sm mt-2 rep-presets"></div>');
+
+            repPresets.forEach(function(rep) {
+                $('<button type="button" class="btn btn-outline-secondary"></button>')
+                    .text(rep)
+                    .click(function(e) {
+                        e.preventDefault();
+                        repsInput.val(rep);
+                    })
+                    .appendTo(repDiv);
+            });
+
+            repsInput.after(repDiv);
+        });
+    </script>
 }
