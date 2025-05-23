@@ -8,16 +8,16 @@ namespace RepTrackBusiness.Interfaces
     public interface IExerciseSetService
     {
         /// <summary>
-        /// Adds a set to a workout exercise
+        /// Adds a set to a workout exercise (order is automatically determined)
         /// </summary>
         Task<ExerciseSet> AddSetToExerciseAsync(int workoutExerciseId, SetType type, decimal weight,
-            int repetitions, decimal rpe, int orderInExercise, bool isCompleted);
+            int repetitions, decimal rpe, bool isCompleted);
 
         /// <summary>
         /// Updates an existing set
         /// </summary>
         Task<ExerciseSet> UpdateSetAsync(int setId, SetType type, decimal weight,
-            int repetitions, decimal rpe, int orderInExercise, bool isCompleted);
+            int repetitions, decimal rpe, bool isCompleted);
 
         /// <summary>
         /// Deletes a set

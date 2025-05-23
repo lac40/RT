@@ -78,7 +78,7 @@ namespace RepTrackBusiness.Services
             return workout;
         }
 
-        public async Task AddExerciseToWorkoutAsync(int workoutId, int exerciseId, int orderInWorkout, string notes, string userId)
+        public async Task AddExerciseToWorkoutAsync(int workoutId, int exerciseId, string notes, string userId)
         {
             var workout = await GetWorkoutEntityByIdAsync(workoutId, userId);
 
@@ -87,7 +87,11 @@ namespace RepTrackBusiness.Services
             if (exercise == null)
                 throw new NotFoundException($"Exercise with ID {exerciseId} was not found.");
 
-            var workoutExercise = new WorkoutExercise(workoutId, exerciseId, orderInWorkout)
+            // Automatically determine the next order position
+            var existingExercises = workout.Exercises.ToList();
+            var nextOrder = existingExercises.Any() ? existingExercises.Max(e => e.OrderInWorkout) + 1 : 1;
+
+            var workoutExercise = new WorkoutExercise(workoutId, exerciseId, nextOrder)
             {
                 Notes = notes
             };
@@ -96,7 +100,7 @@ namespace RepTrackBusiness.Services
             await _unitOfWork.CompleteAsync();
         }
 
-        public async Task UpdateWorkoutExerciseAsync(int workoutExerciseId, int exerciseId, int orderInWorkout, string notes, string userId)
+        public async Task UpdateWorkoutExerciseAsync(int workoutExerciseId, int exerciseId, string notes, string userId)
         {
             // Get the workout exercise with its associated workout
             var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdWithWorkoutAsync(workoutExerciseId);
@@ -114,8 +118,8 @@ namespace RepTrackBusiness.Services
             if (exercise == null)
                 throw new NotFoundException($"Exercise with ID {exerciseId} was not found.");
 
-            // Update the workout exercise
-            workoutExercise.Update(notes, exerciseId, orderInWorkout);
+            // Update the workout exercise (keep the same order)
+            workoutExercise.Update(notes, exerciseId, workoutExercise.OrderInWorkout);
 
             await _unitOfWork.CompleteAsync();
         }
@@ -136,6 +140,19 @@ namespace RepTrackBusiness.Services
             // Remove the workout exercise
             _unitOfWork.WorkoutExercises.Remove(workoutExercise);
             await _unitOfWork.CompleteAsync();
+
+            // Reorder remaining exercises to close gaps
+            var remainingExercises = workout.Exercises
+                .Where(e => e.Id != workoutExerciseId)
+                .OrderBy(e => e.OrderInWorkout)
+                .ToList();
+
+            for (int i = 0; i < remainingExercises.Count; i++)
+            {
+                remainingExercises[i].OrderInWorkout = i + 1;
+            }
+
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task ReorderExercisesAsync(int workoutId, List<int> exerciseIds, string userId)
@@ -151,11 +168,11 @@ namespace RepTrackBusiness.Services
                 }
             }
 
-            // Update the order
+            // Update the order based on the new sequence
             for (int i = 0; i < exerciseIds.Count; i++)
             {
                 var exercise = workout.Exercises.First(e => e.Id == exerciseIds[i]);
-                exercise.OrderInWorkout = i;
+                exercise.OrderInWorkout = i + 1; // Start ordering from 1
             }
 
             await _unitOfWork.CompleteAsync();

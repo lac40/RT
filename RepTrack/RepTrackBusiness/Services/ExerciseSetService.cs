@@ -20,7 +20,7 @@ namespace RepTrackBusiness.Services
         }
 
         public async Task<ExerciseSet> AddSetToExerciseAsync(int workoutExerciseId, SetType type, decimal weight,
-            int repetitions, decimal rpe, int orderInExercise, bool isCompleted)
+            int repetitions, decimal rpe, bool isCompleted)
         {
             // Get the workout exercise
             var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdWithWorkoutAsync(workoutExerciseId);
@@ -28,12 +28,9 @@ namespace RepTrackBusiness.Services
             if (workoutExercise == null)
                 throw new NotFoundException($"Workout exercise with ID {workoutExerciseId} was not found.");
 
-            // If order is 0 or not specified, automatically position at the end
-            if (orderInExercise <= 0)
-            {
-                var existingSets = await _unitOfWork.ExerciseSets.GetByWorkoutExerciseIdAsync(workoutExerciseId);
-                orderInExercise = existingSets.Count() + 1;
-            }
+            // Automatically determine the next order position
+            var existingSets = await _unitOfWork.ExerciseSets.GetByWorkoutExerciseIdAsync(workoutExerciseId);
+            var nextOrder = existingSets.Any() ? existingSets.Max(s => s.OrderInExercise) + 1 : 1;
 
             // Create a new set
             var set = new ExerciseSet(
@@ -42,7 +39,7 @@ namespace RepTrackBusiness.Services
                 weight,
                 repetitions,
                 rpe,
-                orderInExercise);
+                nextOrder);
 
             if (isCompleted)
                 set.MarkAsCompleted();
@@ -55,14 +52,15 @@ namespace RepTrackBusiness.Services
         }
 
         public async Task<ExerciseSet> UpdateSetAsync(int setId, SetType type, decimal weight,
-            int repetitions, decimal rpe, int orderInExercise, bool isCompleted)
+            int repetitions, decimal rpe, bool isCompleted)
         {
             var set = await _unitOfWork.ExerciseSets.GetByIdAsync(setId);
 
             if (set == null)
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
-            set.Update(type, weight, repetitions, rpe, orderInExercise);
+            // Keep the same order when updating
+            set.Update(type, weight, repetitions, rpe, set.OrderInExercise);
 
             if (isCompleted && !set.IsCompleted)
                 set.MarkAsCompleted();
@@ -79,7 +77,20 @@ namespace RepTrackBusiness.Services
             if (set == null)
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
+            var workoutExerciseId = set.WorkoutExerciseId;
+
             _unitOfWork.ExerciseSets.Remove(set);
+            await _unitOfWork.CompleteAsync();
+
+            // Reorder remaining sets to close gaps
+            var remainingSets = await _unitOfWork.ExerciseSets.GetByWorkoutExerciseIdAsync(workoutExerciseId);
+            var orderedSets = remainingSets.OrderBy(s => s.OrderInExercise).ToList();
+
+            for (int i = 0; i < orderedSets.Count; i++)
+            {
+                orderedSets[i].OrderInExercise = i + 1;
+            }
+
             await _unitOfWork.CompleteAsync();
         }
 
@@ -113,7 +124,7 @@ namespace RepTrackBusiness.Services
                 }
             }
 
-            // Update the order
+            // Update the order based on the new sequence
             for (int i = 0; i < setIds.Count; i++)
             {
                 var set = sets.First(s => s.Id == setIds[i]);
