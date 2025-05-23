@@ -61,10 +61,10 @@ namespace RepTrackWeb.Controllers
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+                // Order is now handled automatically by the service
                 await _workoutService.AddExerciseToWorkoutAsync(
                     model.WorkoutId,
                     model.ExerciseId,
-                    model.OrderInWorkout,
                     model.Notes,
                     userId);
 
@@ -105,7 +105,6 @@ namespace RepTrackWeb.Controllers
                 Id = id,
                 WorkoutId = workoutId,
                 ExerciseId = workoutExercise.ExerciseId,
-                OrderInWorkout = workoutExercise.OrderInWorkout,
                 Notes = workoutExercise.Notes,
                 Exercises = exercises.Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
                 {
@@ -126,11 +125,10 @@ namespace RepTrackWeb.Controllers
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                // Add service method for updating workout exercise
+                // Order is preserved automatically by the service
                 await _workoutService.UpdateWorkoutExerciseAsync(
                     model.Id,
                     model.ExerciseId,
-                    model.OrderInWorkout,
                     model.Notes,
                     userId);
 
@@ -155,7 +153,7 @@ namespace RepTrackWeb.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Add service method for deleting workout exercise
+            // Automatic reordering is handled by the service
             await _workoutService.RemoveExerciseFromWorkoutAsync(id, userId);
 
             return RedirectToAction("Details", "WorkoutSession", new { id = workoutId });

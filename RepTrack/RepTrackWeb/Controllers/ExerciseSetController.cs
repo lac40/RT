@@ -46,9 +46,8 @@ namespace RepTrackWeb.Controllers
                 WorkoutExerciseId = workoutExerciseId,
                 WorkoutId = workoutId,
                 ExerciseName = workoutExercise.Exercise.Name,
-                SetTypes = GetSetTypeSelectList(),
-                OrderInExercise = workout.Exercises
-                    .FirstOrDefault(e => e.Id == workoutExerciseId)?.Sets.Count + 1 ?? 1 // Default to next position
+                SetTypes = GetSetTypeSelectList()
+                // Order is now handled automatically
             };
 
             return View(model);
@@ -61,13 +60,13 @@ namespace RepTrackWeb.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Order is now handled automatically by the service
                 await _exerciseSetService.AddSetToExerciseAsync(
                     model.WorkoutExerciseId,
                     model.Type,
                     model.Weight,
                     model.Repetitions,
                     model.RPE,
-                    model.OrderInExercise,
                     model.IsCompleted);
 
                 return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
@@ -107,9 +106,9 @@ namespace RepTrackWeb.Controllers
                 Weight = exerciseSet.Weight,
                 Repetitions = exerciseSet.Repetitions,
                 RPE = exerciseSet.RPE,
-                OrderInExercise = exerciseSet.OrderInExercise,
                 IsCompleted = exerciseSet.IsCompleted,
                 SetTypes = GetSetTypeSelectList()
+                // Order is preserved automatically
             };
 
             return View(model);
@@ -122,13 +121,13 @@ namespace RepTrackWeb.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Order is preserved automatically by the service
                 await _exerciseSetService.UpdateSetAsync(
                     model.Id,
                     model.Type,
                     model.Weight,
                     model.Repetitions,
                     model.RPE,
-                    model.OrderInExercise,
                     model.IsCompleted);
 
                 return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
@@ -144,6 +143,7 @@ namespace RepTrackWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id, int workoutId)
         {
+            // Automatic reordering is handled by the service
             await _exerciseSetService.DeleteSetAsync(id);
             return RedirectToAction("Details", "WorkoutSession", new { id = workoutId });
         }
