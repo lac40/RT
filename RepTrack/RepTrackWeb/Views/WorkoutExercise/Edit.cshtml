@@ -21,15 +21,10 @@
         </div>
 
         <div class="mb-3">
-            <label asp-for="OrderInWorkout" class="form-label"></label>
-            <input asp-for="OrderInWorkout" class="form-control" />
-            <span asp-validation-for="OrderInWorkout" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
             <label asp-for="Notes" class="form-label"></label>
-            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Optional notes about this exercise..."></textarea>
             <span asp-validation-for="Notes" class="text-danger"></span>
+            <small class="form-text text-muted">Notes are optional and can help you remember specific techniques or modifications.</small>
         </div>
 
         <div class="mb-3">

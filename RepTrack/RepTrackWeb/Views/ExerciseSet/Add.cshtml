@@ -14,16 +14,11 @@
         <input type="hidden" asp-for="ExerciseName" />
 
         <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-12 mb-3">
                 <label asp-for="Type" class="form-label"></label>
                 <select asp-for="Type" asp-items="Model.SetTypes" class="form-select"></select>
                 <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label asp-for="OrderInExercise" class="form-label"></label>
-                <input asp-for="OrderInExercise" class="form-control" />
-                <span asp-validation-for="OrderInExercise" class="text-danger"></span>
-                <small class="text-muted">Leave as is to add at the end</small>
+                <small class="form-text text-muted">Choose the type of set you're performing.</small>
             </div>
         </div>
 
@@ -46,12 +41,14 @@
                 <input asp-for="RPE" class="form-control" type="range" min="0" max="10" step="0.5" oninput="rpeOutput.value = this.value" />
                 <output id="rpeOutput">@Model.RPE</output>
                 <span asp-validation-for="RPE" class="text-danger"></span>
+                <small class="form-text text-muted">Rate of Perceived Exertion (0-10 scale)</small>
             </div>
         </div>
 
         <div class="form-check mb-3">
             <input asp-for="IsCompleted" class="form-check-input" />
             <label asp-for="IsCompleted" class="form-check-label"></label>
+            <small class="form-text text-muted">Check this if you've already completed this set.</small>
         </div>
 
         <div class="d-flex justify-content-between">

@@ -5,7 +5,7 @@
 }
 
 <div class="container">
-    <h1>Edit Set</h1>
+    <h1>Edit Set for @Model.ExerciseName</h1>
 
     <form asp-action="Edit" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -18,28 +18,26 @@
             <span asp-validation-for="Type" class="text-danger"></span>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Weight" class="form-label"></label>
-            <input asp-for="Weight" class="form-control" />
-            <span asp-validation-for="Weight" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Repetitions" class="form-label"></label>
-            <input asp-for="Repetitions" class="form-control" />
-            <span asp-validation-for="Repetitions" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="RPE" class="form-label"></label>
-            <input asp-for="RPE" class="form-control" />
-            <span asp-validation-for="RPE" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="OrderInExercise" class="form-label"></label>
-            <input asp-for="OrderInExercise" class="form-control" />
-            <span asp-validation-for="OrderInExercise" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="Weight" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="Weight" class="form-control" />
+                    <span class="input-group-text">kg</span>
+                </div>
+                <span asp-validation-for="Weight" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="Repetitions" class="form-label"></label>
+                <input asp-for="Repetitions" class="form-control" />
+                <span asp-validation-for="Repetitions" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="RPE" class="form-label"></label>
+                <input asp-for="RPE" class="form-control" type="range" min="0" max="10" step="0.5" oninput="rpeOutput.value = this.value" />
+                <output id="rpeOutput">@Model.RPE</output>
+                <span asp-validation-for="RPE" class="text-danger"></span>
+            </div>
         </div>
 
         <div class="form-check mb-3">
@@ -58,4 +56,12 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        // Initialize RPE slider on page load
+        $(document).ready(function() {
+            const rpeSlider = document.querySelector('input[type="range"]');
+            const rpeOutput = document.getElementById('rpeOutput');
+            rpeOutput.value = rpeSlider.value;
+        });
+    </script>
 }
