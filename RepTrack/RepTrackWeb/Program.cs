@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using RepTrackBusiness.Interfaces;
 using RepTrackBusiness.Mapper;
@@ -54,6 +55,9 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
+
+            // Register email sender for ASP.NET Identity
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             builder.Services.AddResponseCompression(options =>
             {
