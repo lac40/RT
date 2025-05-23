@@ -49,6 +49,7 @@ namespace RepTrackTests.Business.Services
 
             // Assert
             Assert.Equal(2, result.Count());
+            _mockExerciseRepo.Verify(repo => repo.GetActiveExercisesAsync(), Times.Once);
         }
 
         [Fact]
@@ -107,6 +108,96 @@ namespace RepTrackTests.Business.Services
         }
 
         [Fact]
+        public async Task SearchExercises_WithSearchTerm_ReturnsMatchingExercises()
+        {
+            // Arrange
+            var searchTerm = "Press";
+            var allExercises = new List<Exercise>
+            {
+                new Exercise("Bench Press", MuscleGroup.Chest) { Description = "Chest exercise" },
+                new Exercise("Shoulder Press", MuscleGroup.Shoulders) { Description = "Shoulder exercise" },
+                new Exercise("Squat", MuscleGroup.Quadriceps) { Description = "Leg exercise" },
+                new Exercise("Deadlift", MuscleGroup.Back) { Description = "Compound press movement" }
+            };
+
+            _mockExerciseRepo.Setup(repo => repo.GetActiveExercisesAsync())
+                .ReturnsAsync(allExercises);
+
+            // Act
+            var result = await _exerciseService.SearchExercisesAsync(searchTerm);
+
+            // Assert
+            Assert.Equal(3, result.Count()); // Should match "Bench Press", "Shoulder Press", and "Deadlift" (description contains "press")
+            Assert.Contains(result, e => e.Name == "Bench Press");
+            Assert.Contains(result, e => e.Name == "Shoulder Press");
+            Assert.Contains(result, e => e.Name == "Deadlift");
+            Assert.DoesNotContain(result, e => e.Name == "Squat");
+        }
+
+        [Fact]
+        public async Task SearchExercises_EmptySearchTerm_ReturnsAllExercises()
+        {
+            // Arrange
+            var searchTerm = "";
+            var allExercises = new List<Exercise>
+            {
+                new Exercise("Bench Press", MuscleGroup.Chest),
+                new Exercise("Squat", MuscleGroup.Quadriceps)
+            };
+
+            _mockExerciseRepo.Setup(repo => repo.GetActiveExercisesAsync())
+                .ReturnsAsync(allExercises);
+
+            // Act
+            var result = await _exerciseService.SearchExercisesAsync(searchTerm);
+
+            // Assert
+            Assert.Equal(2, result.Count());
+        }
+
+        [Fact]
+        public async Task SearchExercises_NullSearchTerm_ReturnsAllExercises()
+        {
+            // Arrange
+            string searchTerm = null;
+            var allExercises = new List<Exercise>
+            {
+                new Exercise("Bench Press", MuscleGroup.Chest),
+                new Exercise("Squat", MuscleGroup.Quadriceps)
+            };
+
+            _mockExerciseRepo.Setup(repo => repo.GetActiveExercisesAsync())
+                .ReturnsAsync(allExercises);
+
+            // Act
+            var result = await _exerciseService.SearchExercisesAsync(searchTerm);
+
+            // Assert
+            Assert.Equal(2, result.Count());
+        }
+
+        [Fact]
+        public async Task SearchExercises_CaseInsensitiveSearch_FindsMatches()
+        {
+            // Arrange
+            var searchTerm = "BENCH";
+            var allExercises = new List<Exercise>
+            {
+                new Exercise("Bench Press", MuscleGroup.Chest),
+                new Exercise("Dumbbell Bench Press", MuscleGroup.Chest)
+            };
+
+            _mockExerciseRepo.Setup(repo => repo.GetActiveExercisesAsync())
+                .ReturnsAsync(allExercises);
+
+            // Act
+            var result = await _exerciseService.SearchExercisesAsync(searchTerm);
+
+            // Assert
+            Assert.Equal(2, result.Count());
+        }
+
+        [Fact]
         public async Task GetExerciseById_ExistingId_ReturnsExercise()
         {
             // Arrange
@@ -162,6 +253,8 @@ namespace RepTrackTests.Business.Services
             Assert.Equal(description, result.Description);
             Assert.Equal(equipment, result.EquipmentRequired);
             Assert.Equal(2, result.SecondaryMuscleGroups.Count);
+            Assert.Contains(MuscleGroup.Shoulders, result.SecondaryMuscleGroups);
+            Assert.Contains(MuscleGroup.Triceps, result.SecondaryMuscleGroups);
 
             _mockExerciseRepo.Verify(repo => repo.AddAsync(It.IsAny<Exercise>()), Times.Once);
             _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
@@ -245,7 +338,7 @@ namespace RepTrackTests.Business.Services
         }
 
         [Fact]
-        public async Task CreateExercise_SecondaryGroupSameAsPrimary_DoesNotAddThatGroup()
+        public async Task CreateExercise_SecondaryGroupSameAsPrimary_DoesNotAddDuplicateGroup()
         {
             // Arrange
             var name = "New Exercise";
@@ -267,6 +360,31 @@ namespace RepTrackTests.Business.Services
             Assert.Single(result.SecondaryMuscleGroups);
             Assert.Contains(MuscleGroup.Shoulders, result.SecondaryMuscleGroups);
             Assert.DoesNotContain(muscleGroup, result.SecondaryMuscleGroups);
+        }
+
+        [Fact]
+        public async Task CreateExercise_DuplicateSecondaryGroups_AddsOnlyUnique()
+        {
+            // Arrange
+            var name = "New Exercise";
+            var muscleGroup = MuscleGroup.Chest;
+            var description = "Description";
+            var equipment = "Barbell";
+            var secondaryGroups = new List<MuscleGroup> { MuscleGroup.Shoulders, MuscleGroup.Shoulders, MuscleGroup.Triceps };
+
+            _mockExerciseRepo.Setup(repo => repo.AddAsync(It.IsAny<Exercise>()))
+                .Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+
+            // Act
+            var result = await _exerciseService.CreateExerciseAsync(
+                name, muscleGroup, _userId, description, equipment, secondaryGroups);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.SecondaryMuscleGroups.Count);
+            Assert.Contains(MuscleGroup.Shoulders, result.SecondaryMuscleGroups);
+            Assert.Contains(MuscleGroup.Triceps, result.SecondaryMuscleGroups);
         }
 
         [Fact]

@@ -345,12 +345,11 @@ namespace RepTrackTests.Business.Services
         }
 
         [Fact]
-        public async Task AddExerciseToWorkout_ValidData_AddsExercise()
+        public async Task AddExerciseToWorkout_ValidData_AddsExerciseWithAutomaticOrder()
         {
             // Arrange
             var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
             var exerciseId = 1;
-            var order = 1;
             var notes = "Exercise notes";
             var exercise = new Exercise("Test Exercise", MuscleGroup.Chest);
 
@@ -361,9 +360,41 @@ namespace RepTrackTests.Business.Services
             _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
 
             // Act
-            await _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, order, notes, _userId);
+            await _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, notes, _userId);
 
             // Assert
+            Assert.Single(workout.Exercises);
+            Assert.Equal(1, workout.Exercises.First().OrderInWorkout); // Should automatically be 1 for first exercise
+            _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddExerciseToWorkout_MultipleExercises_AssignsCorrectOrder()
+        {
+            // Arrange
+            var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
+
+            // Add first exercise manually to simulate existing exercises
+            var existingExercise = new WorkoutExercise(workout.Id, 1, 1);
+            workout.AddExercise(existingExercise);
+
+            var newExerciseId = 2;
+            var notes = "Second exercise notes";
+            var exercise = new Exercise("Test Exercise 2", MuscleGroup.Back);
+
+            _mockWorkoutRepo.Setup(repo => repo.GetWorkoutWithDetailsAsync(_workoutId))
+                .ReturnsAsync(workout);
+            _mockExerciseRepo.Setup(repo => repo.GetByIdAsync(newExerciseId))
+                .ReturnsAsync(exercise);
+            _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+
+            // Act
+            await _workoutService.AddExerciseToWorkoutAsync(_workoutId, newExerciseId, notes, _userId);
+
+            // Assert
+            Assert.Equal(2, workout.Exercises.Count);
+            var addedExercise = workout.Exercises.Last();
+            Assert.Equal(2, addedExercise.OrderInWorkout); // Should automatically be 2 for second exercise
             _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
         }
 
@@ -376,7 +407,7 @@ namespace RepTrackTests.Business.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<NotFoundException>(() =>
-                _workoutService.AddExerciseToWorkoutAsync(_workoutId, 1, 1, "Notes", _userId));
+                _workoutService.AddExerciseToWorkoutAsync(_workoutId, 1, "Notes", _userId));
         }
 
         [Fact]
@@ -392,8 +423,10 @@ namespace RepTrackTests.Business.Services
                 .ReturnsAsync((Exercise)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() =>
-                _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, 1, "Notes", _userId));
+            var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
+                _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, "Notes", _userId));
+
+            Assert.Contains($"Exercise with ID {exerciseId} was not found", exception.Message);
         }
 
         [Fact]
@@ -412,34 +445,37 @@ namespace RepTrackTests.Business.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<AccessDeniedException>(() =>
-                _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, 1, "Notes", wrongUserId));
+                _workoutService.AddExerciseToWorkoutAsync(_workoutId, exerciseId, "Notes", wrongUserId));
         }
 
         [Fact]
-        public async Task UpdateWorkoutExercise_ValidData_UpdatesExercise()
+        public async Task UpdateWorkoutExercise_ValidData_UpdatesExerciseKeepingOrder()
         {
             // Arrange
             var workoutExerciseId = 1;
-            var exerciseId = 2;
-            var order = 2;
+            var originalExerciseId = 1;
+            var newExerciseId = 2;
             var notes = "Updated notes";
 
             var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
-            var workoutExercise = new WorkoutExercise(workout.Id, 1);
+            var workoutExercise = new WorkoutExercise(workout.Id, originalExerciseId, 3); // Original order is 3
             workoutExercise.GetType().GetProperty("WorkoutSession").SetValue(workoutExercise, workout);
 
-            var exercise = new Exercise("Test Exercise", MuscleGroup.Chest);
+            var newExercise = new Exercise("Test Exercise", MuscleGroup.Chest);
 
             _mockWorkoutExerciseRepo.Setup(repo => repo.GetByIdWithWorkoutAsync(workoutExerciseId))
                 .ReturnsAsync(workoutExercise);
-            _mockExerciseRepo.Setup(repo => repo.GetByIdAsync(exerciseId))
-                .ReturnsAsync(exercise);
+            _mockExerciseRepo.Setup(repo => repo.GetByIdAsync(newExerciseId))
+                .ReturnsAsync(newExercise);
             _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
 
             // Act
-            await _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, exerciseId, order, notes, _userId);
+            await _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, newExerciseId, notes, _userId);
 
             // Assert
+            Assert.Equal(newExerciseId, workoutExercise.ExerciseId);
+            Assert.Equal(notes, workoutExercise.Notes);
+            Assert.Equal(3, workoutExercise.OrderInWorkout); // Order should be preserved
             _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
         }
 
@@ -453,8 +489,10 @@ namespace RepTrackTests.Business.Services
                 .ReturnsAsync((WorkoutExercise)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() =>
-                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, 1, 1, "Notes", _userId));
+            var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
+                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, 1, "Notes", _userId));
+
+            Assert.Contains($"Workout exercise with ID {workoutExerciseId} was not found", exception.Message);
         }
 
         [Fact]
@@ -474,8 +512,10 @@ namespace RepTrackTests.Business.Services
                 .ReturnsAsync((Exercise)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() =>
-                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, exerciseId, 1, "Notes", _userId));
+            var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
+                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, exerciseId, "Notes", _userId));
+
+            Assert.Contains($"Exercise with ID {exerciseId} was not found", exception.Message);
         }
 
         [Fact]
@@ -499,29 +539,47 @@ namespace RepTrackTests.Business.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<AccessDeniedException>(() =>
-                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, exerciseId, 1, "Notes", wrongUserId));
+                _workoutService.UpdateWorkoutExerciseAsync(workoutExerciseId, exerciseId, "Notes", wrongUserId));
         }
 
         [Fact]
-        public async Task RemoveExerciseFromWorkout_ValidData_RemovesExercise()
+        public async Task RemoveExerciseFromWorkout_ValidData_RemovesAndReordersRemaining()
         {
             // Arrange
-            int workoutExerciseId = 1;
+            int workoutExerciseId = 2;
 
             var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
-            var workoutExercise = new WorkoutExercise(workout.Id, 1);
-            workoutExercise.GetType().GetProperty("WorkoutSession").SetValue(workoutExercise, workout);
+
+            // Create three exercises to test reordering
+            var exercise1 = new WorkoutExercise(workout.Id, 1, 1);
+            var exercise2 = new WorkoutExercise(workout.Id, 2, 2); // This will be removed
+            var exercise3 = new WorkoutExercise(workout.Id, 3, 3);
+
+            exercise1.GetType().GetProperty("Id").SetValue(exercise1, 1);
+            exercise2.GetType().GetProperty("Id").SetValue(exercise2, 2);
+            exercise3.GetType().GetProperty("Id").SetValue(exercise3, 3);
+
+            workout.AddExercise(exercise1);
+            workout.AddExercise(exercise2);
+            workout.AddExercise(exercise3);
+
+            var workoutExerciseToRemove = exercise2;
+            workoutExerciseToRemove.GetType().GetProperty("WorkoutSession").SetValue(workoutExerciseToRemove, workout);
 
             _mockWorkoutExerciseRepo.Setup(repo => repo.GetByIdWithWorkoutAsync(workoutExerciseId))
-                .ReturnsAsync(workoutExercise);
+                .ReturnsAsync(workoutExerciseToRemove);
             _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
 
             // Act
             await _workoutService.RemoveExerciseFromWorkoutAsync(workoutExerciseId, _userId);
 
             // Assert
-            _mockWorkoutExerciseRepo.Verify(repo => repo.Remove(workoutExercise), Times.Once);
-            _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
+            _mockWorkoutExerciseRepo.Verify(repo => repo.Remove(workoutExerciseToRemove), Times.Once);
+            _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Exactly(2)); // Once for removal, once for reordering
+
+            // Verify reordering - exercise3 should now be order 2
+            Assert.Equal(1, exercise1.OrderInWorkout);
+            Assert.Equal(2, exercise3.OrderInWorkout);
         }
 
         [Fact]
@@ -534,8 +592,10 @@ namespace RepTrackTests.Business.Services
                 .ReturnsAsync((WorkoutExercise)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() =>
+            var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
                 _workoutService.RemoveExerciseFromWorkoutAsync(workoutExerciseId, _userId));
+
+            Assert.Contains($"Workout exercise with ID {workoutExerciseId} was not found", exception.Message);
         }
 
         [Fact]
@@ -555,6 +615,96 @@ namespace RepTrackTests.Business.Services
             // Act & Assert
             await Assert.ThrowsAsync<AccessDeniedException>(() =>
                 _workoutService.RemoveExerciseFromWorkoutAsync(workoutExerciseId, wrongUserId));
+        }
+
+        [Fact]
+        public async Task ReorderExercisesAsync_ValidData_UpdatesOrder()
+        {
+            // Arrange
+            var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
+
+            // Create three exercises
+            var exercise1 = new WorkoutExercise(workout.Id, 1, 1);
+            var exercise2 = new WorkoutExercise(workout.Id, 2, 2);
+            var exercise3 = new WorkoutExercise(workout.Id, 3, 3);
+
+            exercise1.GetType().GetProperty("Id").SetValue(exercise1, 1);
+            exercise2.GetType().GetProperty("Id").SetValue(exercise2, 2);
+            exercise3.GetType().GetProperty("Id").SetValue(exercise3, 3);
+
+            workout.AddExercise(exercise1);
+            workout.AddExercise(exercise2);
+            workout.AddExercise(exercise3);
+
+            // New order: 3, 1, 2
+            var newOrder = new List<int> { 3, 1, 2 };
+
+            _mockWorkoutRepo.Setup(repo => repo.GetWorkoutWithDetailsAsync(_workoutId))
+                .ReturnsAsync(workout);
+            _mockUnitOfWork.Setup(uow => uow.CompleteAsync()).ReturnsAsync(1);
+
+            // Act
+            await _workoutService.ReorderExercisesAsync(_workoutId, newOrder, _userId);
+
+            // Assert
+            Assert.Equal(2, exercise1.OrderInWorkout); // Was 1, now 2
+            Assert.Equal(3, exercise2.OrderInWorkout); // Was 2, now 3
+            Assert.Equal(1, exercise3.OrderInWorkout); // Was 3, now 1
+            _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ReorderExercisesAsync_InvalidExerciseId_ThrowsArgumentException()
+        {
+            // Arrange
+            var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
+
+            var exercise1 = new WorkoutExercise(workout.Id, 1, 1);
+            exercise1.GetType().GetProperty("Id").SetValue(exercise1, 1);
+            workout.AddExercise(exercise1);
+
+            // Include an invalid exercise ID
+            var newOrder = new List<int> { 1, 999 };
+
+            _mockWorkoutRepo.Setup(repo => repo.GetWorkoutWithDetailsAsync(_workoutId))
+                .ReturnsAsync(workout);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+                _workoutService.ReorderExercisesAsync(_workoutId, newOrder, _userId));
+
+            Assert.Contains("Exercise ID 999 does not belong to workout", exception.Message);
+        }
+
+        [Fact]
+        public async Task ReorderExercisesAsync_NonExistingWorkout_ThrowsNotFoundException()
+        {
+            // Arrange
+            _mockWorkoutRepo.Setup(repo => repo.GetWorkoutWithDetailsAsync(_workoutId))
+                .ReturnsAsync((WorkoutSession)null);
+
+            var newOrder = new List<int> { 1, 2, 3 };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<NotFoundException>(() =>
+                _workoutService.ReorderExercisesAsync(_workoutId, newOrder, _userId));
+        }
+
+        [Fact]
+        public async Task ReorderExercisesAsync_WrongUserId_ThrowsAccessDeniedException()
+        {
+            // Arrange
+            var wrongUserId = "wrong-user-id";
+            var workout = new WorkoutSession(_userId, DateTime.Now, WorkoutType.Push);
+
+            _mockWorkoutRepo.Setup(repo => repo.GetWorkoutWithDetailsAsync(_workoutId))
+                .ReturnsAsync(workout);
+
+            var newOrder = new List<int> { 1, 2, 3 };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<AccessDeniedException>(() =>
+                _workoutService.ReorderExercisesAsync(_workoutId, newOrder, wrongUserId));
         }
     }
 }
