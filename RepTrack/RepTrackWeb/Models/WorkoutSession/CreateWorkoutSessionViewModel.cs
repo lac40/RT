@@ -17,7 +17,7 @@ namespace RepTrackWeb.Models.WorkoutSession
 
         [Display(Name = "Notes")]
         [MaxLength(500)]
-        public string Notes { get; set; }
+        public string? Notes { get; set; } 
 
         public List<SelectListItem> WorkoutTypes { get; set; } = new List<SelectListItem>();
     }

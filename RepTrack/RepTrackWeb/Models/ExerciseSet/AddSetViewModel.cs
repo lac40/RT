@@ -12,7 +12,7 @@ namespace RepTrackWeb.Models.ExerciseSet
         public int WorkoutId { get; set; }
 
         [Display(Name = "Exercise")]
-        public string ExerciseName { get; set; }
+        public string? ExerciseName { get; set; }
 
         [Required]
         [Display(Name = "Set Type")]
@@ -32,9 +32,6 @@ namespace RepTrackWeb.Models.ExerciseSet
         [Display(Name = "RPE")]
         [Range(0, 10.0)]
         public decimal RPE { get; set; }
-
-        [Display(Name = "Order in Exercise")]
-        public int OrderInExercise { get; set; } = 1;
 
         [Display(Name = "Set Completed")]
         public bool IsCompleted { get; set; }
