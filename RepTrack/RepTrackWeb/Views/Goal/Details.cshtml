@@ -1,0 +1,182 @@
+﻿@using RepTrackDomain.Enums
+@model RepTrackWeb.Models.Goal.GoalDetailViewModel
+
+@{
+    ViewData["Title"] = "Goal Details";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@Model.Title</h1>
+        <div>
+            @if (!Model.IsCompleted)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+                @if (Model.CompletionPercentage >= 100)
+                {
+                    <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-trophy"></i> Mark Complete
+                        </button>
+                    </form>
+                }
+            }
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Delete</a>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Goal Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 40px;">
+                        <div class="progress-bar @Model.GetProgressBarClass()"
+                             role="progressbar"
+                             style="width: @Model.CompletionPercentage%"
+                             aria-valuenow="@Model.CompletionPercentage"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            <span class="h5">@Model.CompletionPercentage.ToString("F0")%</span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-3">
+                            <h6>Description:</h6>
+                            <p>@Model.Description</p>
+                        </div>
+                    }
+
+                    <dl class="row">
+                        <dt class="col-sm-3">Goal Type:</dt>
+                        <dd class="col-sm-9">@Model.Type</dd>
+
+                        <dt class="col-sm-3">Target:</dt>
+                        <dd class="col-sm-9">@Model.TargetDisplay</dd>
+
+                        @if (Model.TargetExerciseName != null)
+                        {
+                            <dt class="col-sm-3">Exercise:</dt>
+                            <dd class="col-sm-9">@Model.TargetExerciseName</dd>
+                        }
+
+                        <dt class="col-sm-3">Start Date:</dt>
+                        <dd class="col-sm-9">@Model.StartDate.ToShortDateString()</dd>
+
+                        <dt class="col-sm-3">Target Date:</dt>
+                        <dd class="col-sm-9">@Model.TargetDate.ToShortDateString()</dd>
+
+                        @if (Model.IsCompleted && Model.CompletedDate.HasValue)
+                        {
+                            <dt class="col-sm-3">Completed Date:</dt>
+                            <dd class="col-sm-9">@Model.CompletedDate.Value.ToShortDateString()</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.Type == GoalType.Strength && Model.TargetExerciseId.HasValue)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Track your progress towards this goal:</p>
+                        <a asp-controller="Analytics" asp-action="Index"
+                           asp-fragment="strength-progress"
+                           asp-route-exerciseId="@Model.TargetExerciseId"
+                           class="btn btn-primary">
+                            <i class="fas fa-chart-line"></i> View Exercise Analytics
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2 text-muted">Status</h6>
+                    @if (Model.IsCompleted)
+                    {
+                        <p class="card-text">
+                            <span class="badge bg-success fs-5">
+                                <i class="fas fa-trophy"></i> Completed
+                            </span>
+                        </p>
+                    }
+                    else if (Model.DaysRemaining < 0)
+                    {
+                        <p class="card-text">
+                            <span class="badge bg-danger fs-5">Overdue</span>
+                        </p>
+                    }
+                    else if (Model.DaysRemaining == 0)
+                    {
+                        <p class="card-text">
+                            <span class="badge bg-warning fs-5">Due Today</span>
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="card-text">
+                            <span class="badge bg-primary fs-5">@Model.DaysRemaining Days Left</span>
+                        </p>
+                    }
+                </div>
+            </div>
+
+            @if (!Model.IsCompleted && Model.CompletionPercentage < 100)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Tips</h6>
+                        @if (Model.Type == GoalType.Strength)
+                        {
+                            <p class="card-text small">
+                                <i class="fas fa-lightbulb text-warning"></i>
+                                Focus on progressive overload. Gradually increase weight or reps each session.
+                            </p>
+                        }
+                        else if (Model.Type == GoalType.Volume)
+                        {
+                            <p class="card-text small">
+                                <i class="fas fa-lightbulb text-warning"></i>
+                                Try adding an extra set or increasing reps to boost your total volume.
+                            </p>
+                        }
+                        else if (Model.Type == GoalType.Frequency)
+                        {
+                            <p class="card-text small">
+                                <i class="fas fa-lightbulb text-warning"></i>
+                                Schedule your workouts in advance to maintain consistency.
+                            </p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

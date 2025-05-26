@@ -25,6 +25,7 @@ namespace RepTrackData
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<ExerciseSet> ExerciseSets { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Goal> Goals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -135,6 +136,39 @@ namespace RepTrackData
                 // Index for performance
                 entity.HasIndex(n => new { n.UserId, n.IsRead });
                 entity.HasIndex(n => n.CreatedAt);
+            });
+
+            // Goal configuration
+            builder.Entity<Goal>(entity =>
+            {
+                entity.HasKey(g => g.Id);
+                entity.Property(g => g.Title).IsRequired().HasMaxLength(100);
+                entity.Property(g => g.Description).HasMaxLength(500);
+
+                // Configure precision for decimal properties
+                entity.Property(g => g.TargetWeight).HasPrecision(8, 2);
+                entity.Property(g => g.TargetVolume).HasPrecision(10, 2);
+                entity.Property(g => g.CompletionPercentage).HasPrecision(5, 2);
+
+                // Configure relationships
+                entity.HasOne(g => g.User)
+                    .WithMany()
+                    .HasForeignKey(g => g.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(g => g.SetByUser)
+                    .WithMany()
+                    .HasForeignKey(g => g.SetByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(g => g.TargetExercise)
+                    .WithMany()
+                    .HasForeignKey(g => g.TargetExerciseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes for performance
+                entity.HasIndex(g => new { g.UserId, g.IsCompleted });
+                entity.HasIndex(g => g.TargetDate);
             });
         }
     }

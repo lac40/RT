@@ -64,6 +64,11 @@ namespace RepTrackWeb.Models.Analytics
         /// Workout comparison data (initially empty, populated via AJAX)
         /// </summary>
         public WorkoutComparisonViewModel ComparisonData { get; set; }
+
+        /// <summary>
+        /// Whether the user can create a new strength goal
+        /// </summary>
+        public bool CanCreateStrengthGoal { get; set; }
     }
 
     /// <summary>

@@ -168,6 +168,12 @@
             </div>
         </div>
 
+        <div class="mt-3" id="goalCreationSection" style="display: none;">
+            <button type="button" class="btn btn-success" id="createGoalBtn">
+                <i class="fas fa-bullseye"></i> Create Goal for This Exercise
+            </button>
+        </div>
+
         <!-- Volume Analytics Section -->
         <div class="analytics-section">
             <h3>Volume Analytics</h3>
@@ -319,6 +325,43 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="createGoalModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create Strength Goal</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createGoalForm">
+                            <div class="mb-3">
+                                <label for="goalTitle" class="form-label">Goal Title</label>
+                                <input type="text" class="form-control" id="goalTitle" required />
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="targetWeight" class="form-label">Target Weight (kg)</label>
+                                    <input type="number" class="form-control" id="targetWeight" step="0.5" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="targetReps" class="form-label">Target Reps</label>
+                                    <input type="number" class="form-control" id="targetReps" min="1" required />
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="targetDate" class="form-label">Target Date</label>
+                                <input type="date" class="form-control" id="targetDate" required />
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveGoalBtn">Create Goal</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
 </div>
 
@@ -432,6 +475,59 @@
             .always(function() {
                 container.show();
                 spinner.hide();
+            });
+
+            $('#goalCreationSection').show();
+
+            // Goal creation functionality
+            $('#createGoalBtn').click(function() {
+                const exerciseName = $('#exerciseSelect option:selected').text();
+                $('#goalTitle').val(`${exerciseName} Strength Goal`);
+    
+                // Pre-fill with suggested values based on current progress
+                if (data.currentWeight > 0) {
+                    $('#targetWeight').val(Math.ceil(data.currentWeight * 1.1)); // Suggest 10% increase
+                }
+    
+                // Set default target date to 3 months from now
+                const targetDate = new Date();
+                targetDate.setMonth(targetDate.getMonth() + 3);
+                $('#targetDate').val(targetDate.toISOString().split('T')[0]);
+    
+                $('#createGoalModal').modal('show');
+            });
+
+            $('#saveGoalBtn').click(function() {
+                const exerciseId = $('#exerciseSelect').val();
+                const title = $('#goalTitle').val();
+                const targetWeight = $('#targetWeight').val();
+                const targetReps = $('#targetReps').val();
+                const targetDate = $('#targetDate').val();
+    
+                if (title && targetWeight && targetReps && targetDate) {
+                    $.post('/Goal/CreateFromAnalytics', {
+                        Title: title,
+                        Type: 0, // Strength
+                        ExerciseId: exerciseId,
+                        TargetWeight: targetWeight,
+                        TargetReps: targetReps,
+                        TargetDate: targetDate
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            $('#createGoalModal').modal('hide');
+                            // Show success message
+                            alert('Goal created successfully!');
+                            // Optionally redirect to goal details
+                            window.location.href = '/Goal/Details/' + response.goalId;
+                        } else {
+                            alert('Error: ' + response.error);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Failed to create goal. Please try again.');
+                    });
+                }
             });
         }
         

@@ -92,6 +92,53 @@
                 </div>
             </div>
         </div>
+
+        @if (Model.ActiveGoals.Any())
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Active Goals</h5>
+                            <a asp-controller="Goal" asp-action="Index" class="btn btn-sm btn-outline-primary">View All Goals</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                @foreach (var goal in Model.ActiveGoals)
+                                {
+                                    <a asp-controller="Goal" asp-action="Details" asp-route-id="@goal.Id"
+                                       class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">@goal.Title</h6>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar"
+                                                         style="width: @goal.CompletionPercentage%"
+                                                         aria-valuenow="@goal.CompletionPercentage"
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        @goal.CompletionPercentage.ToString("F0")%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-3 text-end">
+                                                <small class="text-muted">@goal.Type Goal</small><br />
+                                                <span class="badge bg-primary">@goal.DaysRemaining days left</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">
+                You have no active goals. <a asp-controller="Goal" asp-action="Create">Set a new goal</a> to start tracking your progress!
+            </div>
+        }
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">

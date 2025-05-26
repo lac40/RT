@@ -1,0 +1,196 @@
+﻿@model RepTrackWeb.Models.Goal.CreateGoalViewModel
+
+@{
+    ViewData["Title"] = "Create Goal";
+}
+
+<div class="container">
+    <h1>Create New Goal</h1>
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Goal Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="e.g., Bench Press 100kg" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Optional description or notes about your goal"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Type" class="form-label"></label>
+                        <select asp-for="Type" class="form-select" id="goalType">
+                            <option value="0">Strength</option>
+                            <option value="1">Volume</option>
+                            <option value="2">Frequency</option>
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="StartDate" class="form-label"></label>
+                        <input asp-for="StartDate" class="form-control" readonly />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="TargetDate" class="form-label"></label>
+                        <input asp-for="TargetDate" class="form-control" type="date" />
+                        <span asp-validation-for="TargetDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strength Goal Section -->
+        <div class="card mb-3 goal-type-section" id="strengthSection">
+            <div class="card-header">
+                <h5 class="mb-0">Strength Goal Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="TargetExerciseId" class="form-label">Exercise</label>
+                    <select asp-for="TargetExerciseId" asp-items="Model.Exercises" class="form-select strength-required">
+                        <option value="">-- Select Exercise --</option>
+                    </select>
+                    <span asp-validation-for="TargetExerciseId" class="text-danger"></span>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TargetWeight" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="TargetWeight" class="form-control strength-required" />
+                            <span class="input-group-text">kg</span>
+                        </div>
+                        <span asp-validation-for="TargetWeight" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TargetReps" class="form-label"></label>
+                        <input asp-for="TargetReps" class="form-control strength-required" />
+                        <span asp-validation-for="TargetReps" class="text-danger"></span>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Strength goals track your ability to lift a specific weight for a certain number of reps.
+                </small>
+            </div>
+        </div>
+
+        <!-- Volume Goal Section -->
+        <div class="card mb-3 goal-type-section" id="volumeSection" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">Volume Goal Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Exercise</label>
+                    <select name="VolumeExerciseId" class="form-select volume-required">
+                        <option value="">-- Select Exercise --</option>
+                        @foreach (var exercise in Model.Exercises)
+                        {
+                            <option value="@exercise.Value">@exercise.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="TargetVolume" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="TargetVolume" class="form-control volume-required" />
+                        <span class="input-group-text">kg total volume per workout</span>
+                    </div>
+                    <span asp-validation-for="TargetVolume" class="text-danger"></span>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Volume goals track the total weight × reps for an exercise in a single workout.
+                </small>
+            </div>
+        </div>
+
+        <!-- Frequency Goal Section -->
+        <div class="card mb-3 goal-type-section" id="frequencySection" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">Frequency Goal Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TargetFrequency" class="form-label"></label>
+                        <input asp-for="TargetFrequency" class="form-control frequency-required" />
+                        <span asp-validation-for="TargetFrequency" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TargetWorkoutType" class="form-label"></label>
+                        <select asp-for="TargetWorkoutType" class="form-select">
+                            <option value="">All Workout Types</option>
+                            @foreach (var workoutType in Enum.GetValues(typeof(RepTrackDomain.Enums.WorkoutType)))
+                            {
+                                <option value="@((int)workoutType)">@workoutType</option>
+                            }
+                        </select>
+                        <span asp-validation-for="TargetWorkoutType" class="text-danger"></span>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Frequency goals track how many workouts you complete each month.
+                </small>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Create Goal</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Show/hide sections based on goal type
+            $('#goalType').change(function() {
+                const selectedType = $(this).val();
+
+                // Hide all sections
+                $('.goal-type-section').hide();
+
+                // Clear required attributes
+                $('.strength-required, .volume-required, .frequency-required').prop('required', false);
+
+                // Show and enable required fields for selected type
+                switch(selectedType) {
+                    case '0': // Strength
+                        $('#strengthSection').show();
+                        $('.strength-required').prop('required', true);
+                        break;
+                    case '1': // Volume
+                        $('#volumeSection').show();
+                        $('.volume-required').prop('required', true);
+                        // Copy exercise selection to hidden field
+                        $('select[name="VolumeExerciseId"]').change(function() {
+                            $('#TargetExerciseId').val($(this).val());
+                        });
+                        break;
+                    case '2': // Frequency
+                        $('#frequencySection').show();
+                        $('.frequency-required').prop('required', true);
+                        break;
+                }
+            });
+
+            // Trigger change event on page load
+            $('#goalType').trigger('change');
+        });
+    </script>
+}

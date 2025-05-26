@@ -100,6 +100,13 @@ namespace RepTrackWeb.Controllers
                 ComparisonData = new WorkoutComparisonViewModel()
             };
 
+            // Check if user can create a new strength goal
+            var goalService = HttpContext.RequestServices.GetService<IGoalService>();
+            if (goalService != null)
+            {
+                model.CanCreateStrengthGoal = true; // Default to true, will be checked per exercise via AJAX
+            }
+
             return View(model);
         }
 
