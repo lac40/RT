@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepTrackBusiness.Interfaces;
+using RepTrackCommon.Exceptions;
 using RepTrackDomain.Enums;
 using RepTrackWeb.Models.Pagination;
 using RepTrackWeb.Models.WorkoutSession;
@@ -128,6 +129,54 @@ namespace RepTrackWeb.Controllers
             // If we got this far, something failed, redisplay form
             model.WorkoutTypes = GetWorkoutTypeSelectList();
             return View(model);
+        }
+
+        // GET: WorkoutSession/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try
+            {
+                // Use the service to retrieve the workout, which includes ownership validation
+                var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
+
+                var viewModel = _mapper.Map<WorkoutSessionDetailViewModel>(workout);
+
+                return View(viewModel);
+            }
+            catch (NotFoundException)
+            {
+                throw;
+            }
+            catch (AccessDeniedException)
+            {
+                throw;
+            }
+        }
+
+        // POST: WorkoutSession/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, IFormCollection collection)
+        {
+            // Get the current user's ID for authorization
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            try
+            {
+                await _workoutService.DeleteWorkoutAsync(id, userId);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (NotFoundException)
+            {
+                throw;
+            }
+            catch (AccessDeniedException)
+            {
+                throw;
+            }
         }
 
         // POST: WorkoutSession/Complete/5
