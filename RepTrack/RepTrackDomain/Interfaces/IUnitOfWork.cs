@@ -14,6 +14,7 @@ namespace RepTrackDomain.Interfaces
         IExerciseSetRepository ExerciseSets { get; }
         INotificationRepository Notifications { get; }
         IGoalRepository Goals { get; }
+        IUserRepository Users { get; }
 
         Task<int> CompleteAsync();
     }

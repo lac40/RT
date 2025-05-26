@@ -16,6 +16,7 @@ namespace RepTrackData.Repositories
         private IExerciseSetRepository _exerciseSets;
         private INotificationRepository _notifications;
         private IGoalRepository _goals;
+        private IUserRepository _users;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -39,6 +40,9 @@ namespace RepTrackData.Repositories
 
         public IGoalRepository Goals =>
             _goals ??= new GoalRepository(_context);
+            
+        public IUserRepository Users =>
+            _users ??= new UserRepository(_context);
 
         public async Task<int> CompleteAsync()
         {
