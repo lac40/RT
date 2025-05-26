@@ -88,7 +88,6 @@ namespace RepTrackBusiness.Services
                 using var client = new SmtpClient();
 
                 // Configure the client to accept all SSL certificates (for development)
-                // In production, you might want to validate certificates properly
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
                 // Connect to the SMTP server
@@ -113,8 +112,7 @@ namespace RepTrackBusiness.Services
                 // This prevents email failures from breaking the user experience
                 _logger.LogError(ex, $"Failed to send email to {email}. Subject: {subject}");
 
-                // In development, you might want to throw this exception to see errors
-                // In production, it's often better to fail silently for emails
+                // In development throw this exception to see errors
                 if (_configuration["Environment"] == "Development")
                 {
                     throw;

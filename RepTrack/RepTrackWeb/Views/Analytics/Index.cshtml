@@ -1,0 +1,972 @@
+﻿@model RepTrackWeb.Models.Analytics.AnalyticsDashboardViewModel
+
+@{
+    ViewData["Title"] = "Workout Analytics";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .analytics-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .date-range-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1rem;
+        }
+        
+        .comparison-chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1b6ec2;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .change-positive {
+            color: #28a745;
+        }
+        
+        .change-negative {
+            color: #dc3545;
+        }
+        
+        .no-data-message {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .progress-table td {
+            white-space: nowrap;
+        }
+        
+        /* Styles for non-JS fallback tables */
+        .static-table {
+            display: table;
+        }
+        
+        .interactive-chart {
+            display: none;
+        }
+        
+        /* When JS is enabled, we'll hide tables and show charts */
+        .js-enabled .static-table {
+            display: none;
+        }
+        
+        .js-enabled .interactive-chart {
+            display: block;
+        }
+    </style>
+}
+
+<div class="container">
+    <h1 class="mb-4">Workout Analytics</h1>
+
+    @if (!Model.HasData)
+    {
+        <div class="alert alert-info">
+            <h4>No Workout Data Available</h4>
+            <p>You need to log some workouts before you can view analytics. <a asp-controller="WorkoutSession" asp-action="Create">Log your first workout</a> to get started!</p>
+        </div>
+    }
+    else
+    {
+        <!-- Date Range Selector -->
+        <div class="analytics-section">
+            <h3>Analysis Period</h3>
+            <div class="date-range-selector">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary range-preset" data-range="1">Last Month</button>
+                    <button type="button" class="btn btn-outline-primary range-preset active" data-range="3">Last 3 Months</button>
+                    <button type="button" class="btn btn-outline-primary range-preset" data-range="6">Last 6 Months</button>
+                    <button type="button" class="btn btn-outline-primary range-preset" data-range="12">Last Year</button>
+                    <button type="button" class="btn btn-outline-primary" id="customRangeBtn">Custom Range</button>
+                </div>
+                <div id="customRangeInputs" style="display: none;">
+                    <input type="text" id="startDate" class="form-control" placeholder="Start Date" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                    <input type="text" id="endDate" class="form-control" placeholder="End Date" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+                    <button type="button" class="btn btn-primary" id="applyCustomRange">Apply</button>
+                </div>
+            </div>
+            <small class="text-muted">Your workout history spans from @Model.EarliestWorkoutDate.ToShortDateString() to @Model.LatestWorkoutDate.ToShortDateString()</small>
+        </div>
+
+        <!-- Strength Progress Section -->
+        <div class="analytics-section">
+            <div class="analytics-header">
+                <h3>Strength Progress</h3>
+                <select id="exerciseSelect" class="form-select" style="width: 250px;">
+                    <option value="">Select an exercise...</option>
+                    @foreach (var exercise in Model.AvailableExercises)
+                    {
+                        <option value="@exercise.Id">@exercise.Name</option>
+                    }
+                </select>
+            </div>
+            
+            <div id="strengthProgressContent">
+                <div class="no-data-message">
+                    Select an exercise to view strength progress
+                </div>
+            </div>
+            
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volume Analytics Section -->
+        <div class="analytics-section">
+            <h3>Volume Analytics</h3>
+            
+            <div id="volumeContent">
+                <!-- Static content for non-JS users -->
+                <div class="static-table">
+                    <p class="text-muted">Enable JavaScript to view interactive volume analytics charts.</p>
+                </div>
+                
+                <!-- Dynamic content loaded via AJAX -->
+                <div class="interactive-chart">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalVolume">-</div>
+                                <div class="stat-label">Total Volume (kg)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-value" id="avgVolumePerWorkout">-</div>
+                                <div class="stat-label">Average Volume per Workout</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Volume by Exercise</h5>
+                            <div class="chart-container">
+                                <canvas id="volumeByExerciseChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Volume Trend</h5>
+                            <div class="chart-container">
+                                <canvas id="volumeTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frequency Analytics Section -->
+        <div class="analytics-section">
+            <h3>Workout Frequency</h3>
+            
+            <div id="frequencyContent">
+                <!-- Static content for non-JS users -->
+                <div class="static-table">
+                    <p class="text-muted">Enable JavaScript to view interactive frequency analytics charts.</p>
+                </div>
+                
+                <!-- Dynamic content loaded via AJAX -->
+                <div class="interactive-chart">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalWorkouts">-</div>
+                                <div class="stat-label">Total Workouts</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-value" id="workoutsPerMonth">-</div>
+                                <div class="stat-label">Workouts per Month</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="stat-value" id="avgDaysBetween">-</div>
+                                <div class="stat-label">Avg Days Between Workouts</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Workout Type Distribution</h5>
+                            <div class="chart-container">
+                                <canvas id="workoutTypeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Monthly Frequency</h5>
+                            <div class="chart-container">
+                                <canvas id="monthlyFrequencyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Comparison Section -->
+        <div class="analytics-section">
+            <h3>Workout Comparison</h3>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="workoutTypeSelect">Workout Type</label>
+                    <select id="workoutTypeSelect" class="form-select">
+                        <option value="">Select workout type...</option>
+                        @foreach (var workoutType in Model.AvailableWorkoutTypes)
+                        {
+                            <option value="@((int)workoutType)">@workoutType.ToString()</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="workout1Select">Workout 1</label>
+                    <select id="workout1Select" class="form-select" disabled>
+                        <option value="">Select first workout...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="workout2Select">Workout 2</label>
+                    <select id="workout2Select" class="form-select" disabled>
+                        <option value="">Select second workout...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary mb-3" id="compareBtn" disabled>Compare Workouts</button>
+            
+            <div id="comparisonContent">
+                <div class="no-data-message">
+                    Select two workouts of the same type to compare
+                </div>
+            </div>
+            
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script>
+        // Mark that JavaScript is enabled
+        document.body.classList.add('js-enabled');
+        
+        // Global variables for date range
+        let currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+        let currentEndDate = '@Model.EndDate.ToString("yyyy-MM-dd")';
+        
+        // Chart instances
+        let strengthProgressChart = null;
+        let volumeByExerciseChart = null;
+        let volumeTrendChart = null;
+        let workoutTypeChart = null;
+        let monthlyFrequencyChart = null;
+        
+        // Initialize date pickers
+        const startDatePicker = flatpickr("#startDate", {
+            dateFormat: "Y-m-d",
+            minDate: '@Model.EarliestWorkoutDate.ToString("yyyy-MM-dd")',
+            maxDate: '@Model.LatestWorkoutDate.ToString("yyyy-MM-dd")',
+            defaultDate: currentStartDate
+        });
+        
+        const endDatePicker = flatpickr("#endDate", {
+            dateFormat: "Y-m-d",
+            minDate: '@Model.EarliestWorkoutDate.ToString("yyyy-MM-dd")',
+            maxDate: '@Model.LatestWorkoutDate.ToString("yyyy-MM-dd")',
+            defaultDate: currentEndDate
+        });
+        
+        // Date range preset buttons
+        $('.range-preset').click(function() {
+            $('.range-preset').removeClass('active');
+            $(this).addClass('active');
+            $('#customRangeInputs').hide();
+            
+            const months = parseInt($(this).data('range'));
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - months);
+            
+            updateDateRange(startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]);
+        });
+        
+        // Custom range button
+        $('#customRangeBtn').click(function() {
+            $('.range-preset').removeClass('active');
+            $('#customRangeInputs').show();
+        });
+        
+        // Apply custom range
+        $('#applyCustomRange').click(function() {
+            const startDate = $('#startDate').val();
+            const endDate = $('#endDate').val();
+            
+            if (startDate && endDate) {
+                updateDateRange(startDate, endDate);
+            }
+        });
+        
+        // Update date range and refresh all analytics
+        function updateDateRange(startDate, endDate) {
+            currentStartDate = startDate;
+            currentEndDate = endDate;
+            
+            // Refresh all analytics
+            loadVolumeAnalytics();
+            loadFrequencyAnalytics();
+            
+            // Refresh strength progress if an exercise is selected
+            const selectedExercise = $('#exerciseSelect').val();
+            if (selectedExercise) {
+                loadStrengthProgress(selectedExercise);
+            }
+        }
+        
+        // Exercise selection change
+        $('#exerciseSelect').change(function() {
+            const exerciseId = $(this).val();
+            if (exerciseId) {
+                loadStrengthProgress(exerciseId);
+            }
+        });
+        
+        // Load strength progress data
+        function loadStrengthProgress(exerciseId) {
+            const container = $('#strengthProgressContent');
+            const spinner = container.siblings('.loading-spinner');
+            
+            container.hide();
+            spinner.show();
+            
+            $.get('/Analytics/GetStrengthProgress', {
+                exerciseId: exerciseId,
+                startDate: currentStartDate,
+                endDate: currentEndDate
+            })
+            .done(function(data) {
+                displayStrengthProgress(data);
+            })
+            .fail(function() {
+                container.html('<div class="alert alert-danger">Failed to load strength progress data.</div>');
+            })
+            .always(function() {
+                container.show();
+                spinner.hide();
+            });
+        }
+        
+        // Display strength progress
+        function displayStrengthProgress(data) {
+            const container = $('#strengthProgressContent');
+            
+            if (!data.progressData || data.progressData.length === 0) {
+                container.html('<div class="no-data-message">No data available for this exercise in the selected period.</div>');
+                return;
+            }
+            
+            // Build the HTML content
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">${data.currentWeight} kg</div>
+                            <div class="stat-label">Current Max Weight</div>
+                            <small class="${data.weightGain >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${data.weightGain >= 0 ? '+' : ''}${data.weightGain} kg (${data.weightGainPercentage}%)
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">${data.currentOneRepMax} kg</div>
+                            <div class="stat-label">Current 1RM</div>
+                            <small class="${data.oneRepMaxGain >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${data.oneRepMaxGain >= 0 ? '+' : ''}${data.oneRepMaxGain} kg (${data.oneRepMaxGainPercentage}%)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="strengthProgressChart"></canvas>
+                </div>
+            `;
+            
+            container.html(html);
+            
+            // Create the chart
+            const ctx = document.getElementById('strengthProgressChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (strengthProgressChart) {
+                strengthProgressChart.destroy();
+            }
+            
+            strengthProgressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.progressData.map(p => p.date),
+                    datasets: [
+                        {
+                            label: 'Max Weight (kg)',
+                            data: data.progressData.map(p => p.maxWeight),
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Estimated 1RM (kg)',
+                            data: data.progressData.map(p => p.estimatedOneRepMax),
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Weight (kg)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load volume analytics
+        function loadVolumeAnalytics() {
+            const container = $('#volumeContent');
+            const spinner = container.siblings('.loading-spinner');
+            
+            container.hide();
+            spinner.show();
+            
+            $.get('/Analytics/GetVolumeAnalytics', {
+                startDate: currentStartDate,
+                endDate: currentEndDate
+            })
+            .done(function(data) {
+                displayVolumeAnalytics(data);
+            })
+            .fail(function() {
+                container.html('<div class="alert alert-danger">Failed to load volume analytics data.</div>');
+            })
+            .always(function() {
+                container.show();
+                spinner.hide();
+            });
+        }
+        
+        // Display volume analytics
+        function displayVolumeAnalytics(data) {
+            // Update stat cards
+            $('#totalVolume').text(data.totalVolume.toLocaleString());
+            $('#avgVolumePerWorkout').text(data.averageVolumePerWorkout.toLocaleString());
+            
+            // Volume by Exercise Chart (Pie/Doughnut)
+            const ctxExercise = document.getElementById('volumeByExerciseChart').getContext('2d');
+            
+            if (volumeByExerciseChart) {
+                volumeByExerciseChart.destroy();
+            }
+            
+            // Take top 10 exercises by volume
+            const topExercises = data.exerciseVolumes.slice(0, 10);
+            
+            volumeByExerciseChart = new Chart(ctxExercise, {
+                type: 'doughnut',
+                data: {
+                    labels: topExercises.map(e => e.exerciseName),
+                    datasets: [{
+                        data: topExercises.map(e => e.totalVolume),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(199, 199, 199, 0.8)',
+                            'rgba(83, 102, 255, 0.8)',
+                            'rgba(255, 99, 255, 0.8)',
+                            'rgba(99, 255, 132, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const exercise = topExercises[context.dataIndex];
+                                    return `${exercise.exerciseName}: ${exercise.totalVolume.toLocaleString()} kg (${exercise.percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Volume Trend Chart
+            const ctxTrend = document.getElementById('volumeTrendChart').getContext('2d');
+            
+            if (volumeTrendChart) {
+                volumeTrendChart.destroy();
+            }
+            
+            volumeTrendChart = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: data.volumeTrend.map(v => v.date),
+                    datasets: [{
+                        label: 'Workout Volume',
+                        data: data.volumeTrend.map(v => v.volume),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'week'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Volume (kg)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const point = data.volumeTrend[context.dataIndex];
+                                    return `Workout Type: ${point.workoutType}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load frequency analytics
+        function loadFrequencyAnalytics() {
+            const container = $('#frequencyContent');
+            const spinner = container.siblings('.loading-spinner');
+            
+            container.hide();
+            spinner.show();
+            
+            $.get('/Analytics/GetFrequencyAnalytics', {
+                startDate: currentStartDate,
+                endDate: currentEndDate
+            })
+            .done(function(data) {
+                displayFrequencyAnalytics(data);
+            })
+            .fail(function() {
+                container.html('<div class="alert alert-danger">Failed to load frequency analytics data.</div>');
+            })
+            .always(function() {
+                container.show();
+                spinner.hide();
+            });
+        }
+        
+        // Display frequency analytics
+        function displayFrequencyAnalytics(data) {
+            // Update stat cards
+            $('#totalWorkouts').text(data.totalWorkouts);
+            $('#workoutsPerMonth').text(data.workoutsPerMonth.toFixed(1));
+            $('#avgDaysBetween').text(data.averageDaysBetweenWorkouts.toFixed(1));
+            
+            // Workout Type Distribution Chart
+            const ctxType = document.getElementById('workoutTypeChart').getContext('2d');
+            
+            if (workoutTypeChart) {
+                workoutTypeChart.destroy();
+            }
+            
+            workoutTypeChart = new Chart(ctxType, {
+                type: 'pie',
+                data: {
+                    labels: data.workoutTypeDistribution.map(w => w.workoutType),
+                    datasets: [{
+                        data: data.workoutTypeDistribution.map(w => w.count),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const workout = data.workoutTypeDistribution[context.dataIndex];
+                                    return `${workout.workoutType}: ${workout.count} (${workout.percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Frequency Chart
+            const ctxMonthly = document.getElementById('monthlyFrequencyChart').getContext('2d');
+            
+            if (monthlyFrequencyChart) {
+                monthlyFrequencyChart.destroy();
+            }
+            
+            // Prepare datasets for stacked bar chart
+            const workoutTypes = [...new Set(data.workoutTypeDistribution.map(w => w.workoutType))];
+            const datasets = workoutTypes.map((type, index) => {
+                const colors = [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ];
+                
+                return {
+                    label: type,
+                    data: data.monthlyFrequency.map(m => m.workoutsByType[type] || 0),
+                    backgroundColor: colors[index % colors.length]
+                };
+            });
+            
+            monthlyFrequencyChart = new Chart(ctxMonthly, {
+                type: 'bar',
+                data: {
+                    labels: data.monthlyFrequency.map(m => m.monthName),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Workouts'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Workout comparison functionality
+        $('#workoutTypeSelect').change(function() {
+            const workoutType = $(this).val();
+            
+            if (workoutType) {
+                loadWorkoutsForComparison(workoutType);
+            } else {
+                $('#workout1Select, #workout2Select').prop('disabled', true).empty().append('<option value="">Select workout type first...</option>');
+                $('#compareBtn').prop('disabled', true);
+            }
+        });
+        
+        // Load workouts for comparison
+        function loadWorkoutsForComparison(workoutType) {
+            $.get('/Analytics/GetWorkoutsForComparison', { workoutType: workoutType })
+            .done(function(data) {
+                const options = data.map(w => `<option value="${w.id}">${w.label}</option>`).join('');
+                
+                $('#workout1Select, #workout2Select')
+                    .prop('disabled', false)
+                    .empty()
+                    .append('<option value="">Select workout...</option>')
+                    .append(options);
+            });
+        }
+        
+        // Enable compare button when both workouts are selected
+        $('#workout1Select, #workout2Select').change(function() {
+            const workout1 = $('#workout1Select').val();
+            const workout2 = $('#workout2Select').val();
+            
+            $('#compareBtn').prop('disabled', !(workout1 && workout2 && workout1 !== workout2));
+        });
+        
+        // Compare workouts
+        $('#compareBtn').click(function() {
+            const workout1Id = $('#workout1Select').val();
+            const workout2Id = $('#workout2Select').val();
+            
+            if (workout1Id && workout2Id) {
+                loadWorkoutComparison(workout1Id, workout2Id);
+            }
+        });
+        
+        // Load workout comparison
+        function loadWorkoutComparison(workout1Id, workout2Id) {
+            const container = $('#comparisonContent');
+            const spinner = container.siblings('.loading-spinner');
+            
+            container.hide();
+            spinner.show();
+            
+            $.get('/Analytics/GetWorkoutComparison', {
+                workout1Id: workout1Id,
+                workout2Id: workout2Id
+            })
+            .done(function(data) {
+                displayWorkoutComparison(data);
+            })
+            .fail(function() {
+                container.html('<div class="alert alert-danger">Failed to load comparison data.</div>');
+            })
+            .always(function() {
+                container.show();
+                spinner.hide();
+            });
+        }
+        
+        // Display workout comparison
+        function displayWorkoutComparison(data) {
+            const container = $('#comparisonContent');
+            
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Workout 1: ${new Date(data.workout1.date).toLocaleDateString()}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Type:</strong> ${data.workout1.type}</p>
+                                <p><strong>Total Volume:</strong> ${data.workout1.totalVolume.toLocaleString()} kg</p>
+                                <p><strong>Total Sets:</strong> ${data.workout1.totalSets}</p>
+                                <p><strong>Average RPE:</strong> ${data.workout1.averageRPE.toFixed(1)}</p>
+                                <p><strong>Exercises:</strong> ${data.workout1.exerciseCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Workout 2: ${new Date(data.workout2.date).toLocaleDateString()}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Type:</strong> ${data.workout2.type}</p>
+                                <p><strong>Total Volume:</strong> ${data.workout2.totalVolume.toLocaleString()} kg</p>
+                                <p><strong>Total Sets:</strong> ${data.workout2.totalSets}</p>
+                                <p><strong>Average RPE:</strong> ${data.workout2.averageRPE.toFixed(1)}</p>
+                                <p><strong>Exercises:</strong> ${data.workout2.exerciseCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <div class="stat-value ${data.volumeChange >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${data.volumeChange >= 0 ? '+' : ''}${data.volumeChange.toFixed(0)} kg
+                            </div>
+                            <div class="stat-label">Volume Change</div>
+                            <small>${data.volumeChangePercentage >= 0 ? '+' : ''}${data.volumeChangePercentage.toFixed(1)}%</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <div class="stat-value ${data.intensityChange >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${data.intensityChange >= 0 ? '+' : ''}${data.intensityChange.toFixed(1)}
+                            </div>
+                            <div class="stat-label">Average RPE Change</div>
+                            <small>${data.intensityChangePercentage >= 0 ? '+' : ''}${data.intensityChangePercentage.toFixed(1)}%</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5>Exercise Comparison</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Exercise</th>
+                                <th>Workout 1 Volume</th>
+                                <th>Workout 2 Volume</th>
+                                <th>Change</th>
+                                <th>Sets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.exerciseComparisons.forEach(exercise => {
+                const changeClass = exercise.volumeChange >= 0 ? 'change-positive' : 'change-negative';
+                html += `
+                    <tr>
+                        <td>${exercise.exerciseName}</td>
+                        <td>${exercise.workout1Volume.toLocaleString()} kg</td>
+                        <td>${exercise.workout2Volume.toLocaleString()} kg</td>
+                        <td class="${changeClass}">
+                            ${exercise.volumeChange >= 0 ? '+' : ''}${exercise.volumeChange.toFixed(0)} kg
+                            (${exercise.volumeChangePercentage >= 0 ? '+' : ''}${exercise.volumeChangePercentage.toFixed(1)}%)
+                        </td>
+                        <td>${exercise.workout1Sets} → ${exercise.workout2Sets}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.html(html);
+        }
+        
+        // Initial load of analytics
+        $(document).ready(function() {
+            loadVolumeAnalytics();
+            loadFrequencyAnalytics();
+        });
+    </script>
+}

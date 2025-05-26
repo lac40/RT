@@ -55,6 +55,7 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             // Register email sender for ASP.NET Identity
             builder.Services.AddTransient<IEmailSender, EmailSender>();

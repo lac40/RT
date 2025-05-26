@@ -35,10 +35,11 @@ namespace RepTrackBusiness.Services
         public async Task<WorkoutSession> GetWorkoutByIdAsync(int workoutId, string userId)
         {
             var workout = await _unitOfWork.WorkoutSessions.GetWorkoutWithDetailsAsync(workoutId);
-
+             
             if (workout == null)
                 throw new NotFoundException($"Workout with ID {workoutId} was not found.");
 
+            // think about removing this 
             if (workout.UserId != userId)
                 throw new AccessDeniedException("You do not have permission to access this workout.");
 
