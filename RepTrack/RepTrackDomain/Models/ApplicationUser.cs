@@ -24,8 +24,18 @@ namespace RepTrackDomain.Models
         public bool IsActive { get; set; } = true;
 
         /// <summary>
+        /// Whether the user wants to receive email notifications
+        /// </summary>
+        public bool EmailNotificationsEnabled { get; set; } = true;
+
+        /// <summary>
         /// Navigation property for the user's workout sessions
         /// </summary>
         public virtual ICollection<WorkoutSession> WorkoutSessions { get; set; } = new List<WorkoutSession>();
+
+        /// <summary>
+        /// Navigation property for the user's notifications
+        /// </summary>
+        public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

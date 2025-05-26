@@ -14,6 +14,7 @@ namespace RepTrackData.Repositories
         private IExerciseRepository _exercises;
         private IWorkoutExerciseRepository _workoutExercises;
         private IExerciseSetRepository _exerciseSets;
+        private INotificationRepository _notifications;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -31,6 +32,9 @@ namespace RepTrackData.Repositories
 
         public IExerciseSetRepository ExerciseSets =>
             _exerciseSets ??= new ExerciseSetRepository(_context);
+
+        public INotificationRepository Notifications =>
+            _notifications ??= new NotificationRepository(_context);
 
         public async Task<int> CompleteAsync()
         {

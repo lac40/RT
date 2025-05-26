@@ -1,0 +1,202 @@
+﻿<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+            <span id="notificationCount">0</span>
+        </span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+        <div class="dropdown-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Notifications</h6>
+            <a href="#" id="markAllReadLink" class="small text-muted" style="display: none;">Mark all as read</a>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div id="notificationList" class="notification-list">
+            <div class="text-center p-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item text-center small" asp-controller="Notification" asp-action="Index">View All Notifications</a>
+    </div>
+</li>
+
+<style>
+    .notification-dropdown {
+        width: 350px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .notification-list {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+
+    .notification-dropdown-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+
+        .notification-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-dropdown-item.unread {
+            background-color: #e7f3ff;
+        }
+
+        .notification-dropdown-item .notification-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .notification-dropdown-item .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-dropdown-item .notification-message {
+            font-size: 0.875rem;
+            color: #495057;
+            margin-bottom: 0.25rem;
+        }
+</style>
+
+<script>
+    // Notification polling functionality
+    let notificationPollInterval;
+
+    function loadNotifications() {
+        $.get('@Url.Action("GetNotifications", "Notification")', function(data) {
+            updateNotificationUI(data);
+        });
+    }
+
+    function updateNotificationUI(data) {
+        const badge = $('#notificationBadge');
+        const count = $('#notificationCount');
+        const list = $('#notificationList');
+        const markAllLink = $('#markAllReadLink');
+
+        // Update badge
+        if (data.unreadCount > 0) {
+            count.text(data.unreadCount);
+            badge.show();
+            markAllLink.show();
+        } else {
+            badge.hide();
+            markAllLink.hide();
+        }
+
+        // Update notification list
+        list.empty();
+
+        if (data.notifications.length === 0) {
+            list.append('<div class="text-center p-3 text-muted">No notifications</div>');
+        } else {
+            data.notifications.forEach(function(notification) {
+                const item = $('<div>')
+                    .addClass('notification-dropdown-item')
+                    .addClass(notification.isRead ? '' : 'unread')
+                    .attr('data-notification-id', notification.id);
+
+                const iconClass = getNotificationIcon(notification.type);
+
+                const content = `
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="notification-title">${notification.title}</div>
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${getRelativeTime(notification.createdDate)}</div>
+                        </div>
+                    </div>
+                `;
+
+                item.html(content);
+
+                // Add click handler to mark as read
+                if (!notification.isRead) {
+                    item.click(function() {
+                        markNotificationAsRead(notification.id);
+                    });
+                }
+
+                list.append(item);
+            });
+        }
+    }
+
+    function getNotificationIcon(type) {
+        const icons = {
+            0: 'fas fa-dumbbell text-primary',     // WorkoutAssigned
+            1: 'fas fa-bullseye text-info',        // GoalSet
+            2: 'fas fa-share text-success',        // WorkoutShared
+            3: 'fas fa-user-plus text-warning',    // CoachInvitation
+            4: 'fas fa-bell text-secondary',       // System
+            5: 'fas fa-clock text-danger',         // GoalDeadlineApproaching
+            6: 'fas fa-trophy text-success'        // GoalCompleted
+        };
+        return icons[type] || 'fas fa-bell';
+    }
+
+    function getRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return 'just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+
+        return date.toLocaleDateString();
+    }
+
+    function markNotificationAsRead(notificationId) {
+        $.post('@Url.Action("MarkAsRead", "Notification")', { id: notificationId }, function() {
+            loadNotifications();
+        });
+    }
+
+    // Mark all notifications as read
+    $('#markAllReadLink').click(function(e) {
+        e.preventDefault();
+        $.post('@Url.Action("MarkAllAsRead", "Notification")', function() {
+            loadNotifications();
+        });
+    });
+
+    // Global function to update notification count (can be called from other pages)
+    window.updateNavbarNotificationCount = function() {
+        loadNotifications();
+    };
+
+    // Initialize notifications when page loads
+    $(document).ready(function() {
+        if ($('#notificationDropdown').length) {
+            loadNotifications();
+
+            // Poll for new notifications every 30 seconds
+            notificationPollInterval = setInterval(loadNotifications, 30000);
+        }
+    });
+
+    // Clean up interval when page unloads
+    $(window).on('beforeunload', function() {
+        if (notificationPollInterval) {
+            clearInterval(notificationPollInterval);
+        }
+    });
+</script>

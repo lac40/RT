@@ -24,6 +24,7 @@ namespace RepTrackData
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<ExerciseSet> ExerciseSets { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -116,6 +117,24 @@ namespace RepTrackData
                     .WithMany(we => we.Sets)
                     .HasForeignKey(es => es.WorkoutExerciseId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Notification configuration
+            builder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(n => n.Id);
+                entity.Property(n => n.Message).IsRequired().HasMaxLength(500);
+                entity.Property(n => n.RelatedEntityType).HasMaxLength(50);
+
+                // Configure the relationship with the user
+                entity.HasOne(n => n.User)
+                    .WithMany(u => u.Notifications)
+                    .HasForeignKey(n => n.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Index for performance
+                entity.HasIndex(n => new { n.UserId, n.IsRead });
+                entity.HasIndex(n => n.CreatedAt);
             });
         }
     }
