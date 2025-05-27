@@ -113,11 +113,50 @@ namespace RepTrackBusiness.Services
             await _unitOfWork.CompleteAsync();
         }
 
+        /// <summary>
+        /// Creates notifications for goals approaching deadline
+        /// </summary>
         public async Task CreateGoalDeadlineNotificationsAsync()
         {
-            // This will be implemented when we create the Goal system
-            // For now, it's a placeholder for the interface contract
-            await Task.CompletedTask;
+            // Get all users with active goals
+            var users = await _unitOfWork.Users.GetAllAsync();
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    // Get goals approaching their deadline (within the next 7 days)
+                    var upcomingGoals = await _unitOfWork.Goals.GetUpcomingGoalsAsync(user.Id, 7);
+
+                    foreach (var goal in upcomingGoals)
+                    {
+                        // Avoid spamming users - check if we've already sent a notification recently
+                        var recentNotifications = await _unitOfWork.Notifications.FindAsync(n =>
+                            n.UserId == user.Id &&
+                            n.Type == NotificationType.GoalDeadlineApproaching &&
+                            n.RelatedEntityId == goal.Id &&
+                            n.CreatedAt > DateTime.Now.AddDays(-3)); // Only notify every 3 days at most
+
+                        if (!recentNotifications.Any())
+                        {
+                            var daysRemaining = (goal.TargetDate - DateTime.Now).Days;
+
+                            // Create a notification about the approaching deadline
+                            await CreateNotificationAsync(
+                                user.Id,
+                                NotificationType.GoalDeadlineApproaching,
+                                $"Your goal '{goal.Title}' deadline is in {daysRemaining} days! " +
+                                $"Current progress: {goal.CompletionPercentage:F0}%",
+                                "Goal",
+                                goal.Id);                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing goal deadlines for user {UserId}", user.Id);
+                    // Continue with next user even if one fails
+                }
+            }
         }
 
         /// <summary>
