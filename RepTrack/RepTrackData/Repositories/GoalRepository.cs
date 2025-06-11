@@ -53,12 +53,14 @@ namespace RepTrackData.Repositories
 
         public async Task<IEnumerable<Goal>> GetUpcomingGoalsAsync(string userId, int daysAhead)
         {
-            var targetDate = DateTime.Now.AddDays(daysAhead);
+            var now = DateTime.Now;
+            var targetDate = now.AddDays(daysAhead);
 
             return await _dbSet
                 .Include(g => g.TargetExercise)
                 .Where(g => g.UserId == userId &&
                            !g.IsCompleted &&
+                           g.TargetDate >= now &&
                            g.TargetDate <= targetDate)
                 .OrderBy(g => g.TargetDate)
                 .ToListAsync();
