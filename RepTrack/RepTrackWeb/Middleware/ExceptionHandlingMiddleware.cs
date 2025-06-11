@@ -68,6 +68,12 @@ namespace RepTrackWeb.Middleware
                     statusCode = HttpStatusCode.BadRequest;
                     message = invalidOpEx.Message;
                     break;
+
+                default:
+                    statusCode = HttpStatusCode.InternalServerError;
+                    message = exception.Message + "\nAn unexpected error occurred. Please try again later.";
+                    redirectUrl = "/Home/Error";
+                    break;
             }
 
             context.Response.StatusCode = (int)statusCode;

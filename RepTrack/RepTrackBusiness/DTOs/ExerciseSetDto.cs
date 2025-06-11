@@ -9,7 +9,6 @@ namespace RepTrackBusiness.DTOs
 {
     public class ExerciseSetDto
     {
-        public int Id { get; set; }
         public SetType Type { get; set; }
         public decimal Weight { get; set; }
         public int Repetitions { get; set; }

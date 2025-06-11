@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RepTrackTests.Business.Services.WorkoutSessionServiceTests">
+    <Position X="0.5" Y="0.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\WorkoutSessionServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Business.Services.ExerciseServiceTests">
+    <Position X="4" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\ExerciseServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Business.Services.ExerciseSetServiceTests">
+    <Position X="7" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\ExerciseSetServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Business.Services.AnalyticsServiceTests">
+    <Position X="10.25" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\AnalyticsServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Business.Services.NotificationServiceTests">
+    <Position X="13.25" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\NotificationServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Business.Services.GoalServiceTests">
+    <Position X="16.5" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Business\Services\GoalServiceTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.WorkoutSessionTests">
+    <Position X="0.5" Y="3.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\WorkoutSessionTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.ExerciseTests">
+    <Position X="3.75" Y="3.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\ExerciseTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.ExerciseSetTests">
+    <Position X="6.5" Y="3.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\ExerciseSetTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.WorkoutExerciseTests">
+    <Position X="9.25" Y="3.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\WorkoutExerciseTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.NotificationTests">
+    <Position X="12.25" Y="3.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\NotificationTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Domain.Models.GoalTests">
+    <Position X="15" Y="3.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Domain\Models\GoalTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Data.Repositories.WorkoutSessionRepositoryTests">
+    <Position X="0.5" Y="6.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>Data\Repositories\WorkoutSessionRepositoryTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Data.Repositories.ExerciseRepositoryTests">
+    <Position X="4.25" Y="6.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>Data\Repositories\ExerciseRepositoryTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Data.Repositories.UnitOfWorkTests">
+    <Position X="7.5" Y="6.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Data\Repositories\UnitOfWorkTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Web.Controllers.WorkoutSessionControllerTests">
+    <Position X="10.25" Y="6.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Web\Controllers\WorkoutSessionControllerTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Web.Controllers.ExerciseControllerTests">
+    <Position X="13.75" Y="6.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Web\Controllers\ExerciseControllerTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Web.Controllers.DashboardControllerTests">
+    <Position X="16.75" Y="6.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Web\Controllers\DashboardControllerTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Integration.WorkoutSessionIntegrationTests">
+    <Position X="0.5" Y="9.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Integration\WorkoutSessionIntegrationTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Integration.ExerciseIntegrationTests">
+    <Position X="4" Y="9.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Integration\ExerciseIntegrationTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Integration.AnalyticsIntegrationTests">
+    <Position X="7" Y="9.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAEAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Integration\AnalyticsIntegrationTests.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Common.TestHelpers.MockDataGenerator">
+    <Position X="10" Y="9.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Common\TestHelpers\MockDataGenerator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Common.TestHelpers.DatabaseTestFixture">
+    <Position X="13" Y="9.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Common\TestHelpers\DatabaseTestFixture.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RepTrackTests.Common.TestHelpers.WebApplicationTestFixture">
+    <Position X="16" Y="9.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Common\TestHelpers\WebApplicationTestFixture.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
