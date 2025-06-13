@@ -410,6 +410,8 @@ namespace RepTrackTests.Business.Services
             // Act & Assert
             await Assert.ThrowsAsync<NotFoundException>(() =>
                 _workoutService.AddExerciseToWorkoutAsync(_workoutId, 1, "Notes", _userId));
+
+            _mockUnitOfWork.Verify(uow => uow.CompleteAsync(), Times.Never);
         }
 
         [Fact]
