@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Debug Templates";
+}
+
+<h1>Debug Templates</h1>
+
+<h3>Template Counts</h3>
+<p>Total Templates: @ViewBag.TemplateCount</p>
+<p>System Templates: @ViewBag.SystemTemplateCount</p>
+
+<h3>All Templates</h3>
+@if (ViewBag.AllTemplates != null && ((List<RepTrackDomain.Models.WorkoutTemplate>)ViewBag.AllTemplates).Any())
+{
+    <table class="table">
+        <thead>            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Workout Type</th>
+                <th>Is System</th>
+                <th>Created By</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var template in (List<RepTrackDomain.Models.WorkoutTemplate>)ViewBag.AllTemplates)
+            {                <tr>
+                    <td>@template.Id</td>
+                    <td>@template.Name</td>
+                    <td>@template.WorkoutType</td>
+                    <td>@template.IsSystemTemplate</td>
+                    <td>@template.CreatedByUserId</td>
+                    <td>@template.CreatedAt</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No templates found in database.</p>
+}
+
+<h3>System Templates Only</h3>
+@if (ViewBag.SystemTemplates != null && ((List<RepTrackDomain.Models.WorkoutTemplate>)ViewBag.SystemTemplates).Any())
+{
+    <table class="table">
+        <thead>            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Workout Type</th>
+                <th>Created By</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var template in (List<RepTrackDomain.Models.WorkoutTemplate>)ViewBag.SystemTemplates)
+            {                <tr>
+                    <td>@template.Id</td>
+                    <td>@template.Name</td>
+                    <td>@template.WorkoutType</td>
+                    <td>@template.CreatedByUserId</td>
+                    <td>@template.CreatedAt</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No system templates found in database.</p>
+}

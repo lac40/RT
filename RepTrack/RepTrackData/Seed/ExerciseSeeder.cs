@@ -10,8 +10,10 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace RepTrackData.Seed
-{    public static class ExerciseSeeder
-    {        public static async Task SeedExercisesAsync(ApplicationDbContext context)
+{
+    public static class ExerciseSeeder
+    {
+        public static async Task SeedExercisesAsync(ApplicationDbContext context)
         {
             // Check if we already have the comprehensive exercise set by looking for a specific exercise
             if (context.Exercises.Any(e => e.IsSystemExercise && e.Name == "Diamond Push-ups"))

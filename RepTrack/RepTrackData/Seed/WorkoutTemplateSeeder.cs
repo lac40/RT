@@ -7,31 +7,63 @@ using RepTrackDomain.Enums;
 using RepTrackDomain.Models;
 
 namespace RepTrackData.Seed
-{
-    public static class WorkoutTemplateSeeder
+{    public static class WorkoutTemplateSeeder
     {        public static async Task SeedWorkoutTemplatesAsync(ApplicationDbContext context)
         {
-            if (context.WorkoutTemplates.Any(wt => wt.IsSystemTemplate))
-                return; // Already seeded
-
-            // Get seeded exercises for reference
+            Console.WriteLine("=== WorkoutTemplateSeeder: Starting seeding process ===");
+            
+            // Check if we already have a specific system template to avoid reseeding
+            var hasTemplate = context.WorkoutTemplates.Any(wt => wt.IsSystemTemplate && wt.Name == "Push Day - Chest, Shoulders & Triceps");
+            Console.WriteLine($"=== WorkoutTemplateSeeder: Push Day template exists? {hasTemplate} ===");
+            
+            if (hasTemplate)
+            {
+                Console.WriteLine("=== WorkoutTemplateSeeder: Templates already seeded, skipping ===");
+                return; // Templates already seeded
+            }            // Get seeded exercises for reference
             var exercises = context.Exercises.Where(e => e.IsSystemExercise).ToList();
+            Console.WriteLine($"=== WorkoutTemplateSeeder: Found {exercises.Count} system exercises ===");
             if (!exercises.Any())
+            {
+                Console.WriteLine("=== WorkoutTemplateSeeder: No system exercises found, skipping template seeding ===");
                 return; // Exercises need to be seeded first
-
-            // Get the first admin user, or create a placeholder system user
-            var systemUser = context.Users.FirstOrDefault(u => u.UserName == "admin");
+            }            // Get the first admin user, or create a system user for seeding
+            var systemUser = context.Users.FirstOrDefault(u => u.UserName == "admin" || u.UserName == "system");
+            Console.WriteLine($"=== WorkoutTemplateSeeder: System/Admin user found? {systemUser != null} ===");
+            
+            string systemUserId;
             if (systemUser == null)
             {
-                // If no admin user exists, we'll skip seeding templates for now
-                // This can be handled better by creating a proper system user first
-                return;
+                // Create a system user for seeding purposes
+                Console.WriteLine("=== WorkoutTemplateSeeder: Creating system user for seeding ===");
+                
+                var newSystemUser = new ApplicationUser
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserName = "system",
+                    NormalizedUserName = "SYSTEM",
+                    Email = "system@reptrack.app",
+                    NormalizedEmail = "SYSTEM@REPTRACK.APP",
+                    EmailConfirmed = true,
+                    RegistrationDate = DateTime.UtcNow,
+                    IsActive = true,
+                    EmailNotificationsEnabled = false,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    ConcurrencyStamp = Guid.NewGuid().ToString()
+                };
+                
+                context.Users.Add(newSystemUser);
+                await context.SaveChangesAsync();
+                systemUserId = newSystemUser.Id;
+                Console.WriteLine($"=== WorkoutTemplateSeeder: Created system user with ID: {systemUserId} ===");
+            }
+            else
+            {
+                systemUserId = systemUser.Id;
+                Console.WriteLine($"=== WorkoutTemplateSeeder: Using existing user with ID: {systemUserId} ===");
             }
 
             var templates = new List<WorkoutTemplate>();
-
-            // System user ID for templates
-            string systemUserId = systemUser.Id;
 
             // 1. Push Day Template (Chest, Shoulders, Triceps)
             var pushTemplate = new WorkoutTemplate(
@@ -126,15 +158,18 @@ namespace RepTrackData.Seed
                 true
             );
             strengthTemplate.MarkAsSystemTemplate();
-            strengthTemplate.SetTags("strength, compound, intermediate, muscle building, powerlifting");
-            templates.Add(strengthTemplate);
+            strengthTemplate.SetTags("strength, compound, intermediate, muscle building, powerlifting");            templates.Add(strengthTemplate);
 
             // Add all templates to context
+            Console.WriteLine($"=== WorkoutTemplateSeeder: Adding {templates.Count} templates to context ===");
             await context.WorkoutTemplates.AddRangeAsync(templates);
             await context.SaveChangesAsync();
+            Console.WriteLine("=== WorkoutTemplateSeeder: Templates saved to database ===");
 
             // Now add exercises to each template
+            Console.WriteLine("=== WorkoutTemplateSeeder: Adding exercises to templates ===");
             await AddExercisesToTemplates(context, templates, exercises);
+            Console.WriteLine("=== WorkoutTemplateSeeder: Seeding complete ===");
         }
 
         private static async Task AddExercisesToTemplates(ApplicationDbContext context, List<WorkoutTemplate> templates, List<Exercise> exercises)
