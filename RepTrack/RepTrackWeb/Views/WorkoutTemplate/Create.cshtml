@@ -1,0 +1,289 @@
+@model RepTrackWeb.Models.WorkoutTemplate.CreateWorkoutTemplateViewModel
+@{
+    ViewData["Title"] = "Create Workout Template";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Create Workout Template</h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Templates
+                </a>
+            </div>
+
+            <form asp-action="Create" method="post" id="createTemplateForm">
+                @Html.AntiForgeryToken()
+                
+                <div class="row">
+                    <!-- Template Details -->
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Template Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                
+                                <div class="form-group">
+                                    <label asp-for="Template.Name" class="form-label">Template Name *</label>
+                                    <input asp-for="Template.Name" class="form-control" placeholder="Enter template name...">
+                                    <span asp-validation-for="Template.Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Template.Description" class="form-label">Description</label>
+                                    <textarea asp-for="Template.Description" 
+                                              class="form-control" 
+                                              rows="3" 
+                                              placeholder="Describe your workout template..."></textarea>
+                                    <span asp-validation-for="Template.Description" class="text-danger"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="Template.WorkoutType" class="form-label">Workout Type *</label>
+                                            <select asp-for="Template.WorkoutType" class="form-control">
+                                                <option value="">Select workout type...</option>
+                                                @foreach (var type in Model.WorkoutTypes)
+                                                {
+                                                    <option value="@type">@type.ToString()</option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="Template.WorkoutType" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Visibility</label>
+                                            <div class="form-check">
+                                                <input asp-for="Template.IsPublic" class="form-check-input" type="checkbox">
+                                                <label asp-for="Template.IsPublic" class="form-check-label">
+                                                    Make this template public
+                                                </label>
+                                                <small class="form-text text-muted">Public templates can be used by other users</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="Template.Tags" class="form-label">Tags</label>
+                                    <input asp-for="Template.Tags" 
+                                           class="form-control" 
+                                           placeholder="Enter tags separated by commas (e.g., upper body, strength, beginner)">
+                                    <small class="form-text text-muted">Tags help categorize and search templates</small>
+                                    <span asp-validation-for="Template.Tags" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exercises Section -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-dumbbell"></i> Exercises</h5>
+                                <button type="button" class="btn btn-sm btn-primary" id="addExerciseBtn">
+                                    <i class="fas fa-plus"></i> Add Exercise
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="exercisesList">
+                                    <!-- Exercises will be added here dynamically -->
+                                </div>
+                                <div id="noExercisesMessage" class="text-center py-4">
+                                    <i class="fas fa-dumbbell fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">No exercises added yet. Click "Add Exercise" to start building your template.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-list"></i> Available Exercises</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="exerciseSearch" class="form-control mb-3" placeholder="Search exercises...">
+                                </div>
+                                <div id="availableExercisesList" style="max-height: 400px; overflow-y: auto;">
+                                    @foreach (var exercise in Model.AvailableExercises)
+                                    {
+                                        <div class="exercise-item mb-2" data-exercise-id="@exercise.Id" data-exercise-name="@exercise.Name">
+                                            <div class="card card-sm">
+                                                <div class="card-body p-2">
+                                                    <h6 class="card-title mb-1">@exercise.Name</h6>
+                                                    <small class="text-muted">@exercise.PrimaryMuscleGroup</small>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary float-right add-exercise-btn">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fas fa-save"></i> Create Template
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary btn-block">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Exercise Template (Hidden) -->
+<div id="exerciseTemplate" style="display: none;">
+    <div class="exercise-row mb-3" data-exercise-index="">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="exercise-name mb-0"></h6>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary move-up">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary move-down">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-exercise">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="Template.Exercises[].ExerciseId" class="exercise-id">
+                <input type="hidden" name="Template.Exercises[].Order" class="exercise-order">
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Recommended Sets</label>
+                            <input type="number" name="Template.Exercises[].RecommendedSets" class="form-control" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Recommended Reps</label>
+                            <input type="number" name="Template.Exercises[].RecommendedReps" class="form-control" min="1" max="100">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Rest (seconds)</label>
+                            <input type="number" name="Template.Exercises[].RestTime" class="form-control" min="0" max="600">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="Template.Exercises[].Notes" class="form-control" rows="2" placeholder="Exercise-specific notes..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let exerciseIndex = 0;
+
+        // Add exercise functionality
+        $(document).on('click', '.add-exercise-btn', function() {
+            const exerciseItem = $(this).closest('.exercise-item');
+            const exerciseId = exerciseItem.data('exercise-id');
+            const exerciseName = exerciseItem.data('exercise-name');
+            addExerciseToTemplate(exerciseId, exerciseName);
+        });
+
+        $('#addExerciseBtn').click(function() {
+            // Show modal or dropdown to select exercise
+            // For now, just add a placeholder
+            addExerciseToTemplate(1, 'Selected Exercise');
+        });
+
+        function addExerciseToTemplate(exerciseId, exerciseName) {
+            const template = $('#exerciseTemplate').html();
+            const exerciseHtml = template
+                .replace(/data-exercise-index=""/g, `data-exercise-index="${exerciseIndex}"`)
+                .replace(/Template\.Exercises\[\]/g, `Template.Exercises[${exerciseIndex}]`);
+            
+            const exerciseElement = $(exerciseHtml);
+            exerciseElement.find('.exercise-name').text(exerciseName);
+            exerciseElement.find('.exercise-id').val(exerciseId);
+            exerciseElement.find('.exercise-order').val(exerciseIndex + 1);
+            
+            $('#exercisesList').append(exerciseElement);
+            $('#noExercisesMessage').hide();
+            
+            exerciseIndex++;
+            updateExerciseOrders();
+        }
+
+        // Remove exercise
+        $(document).on('click', '.remove-exercise', function() {
+            $(this).closest('.exercise-row').remove();
+            updateExerciseOrders();
+            
+            if ($('#exercisesList .exercise-row').length === 0) {
+                $('#noExercisesMessage').show();
+            }
+        });
+
+        // Move exercises up/down
+        $(document).on('click', '.move-up', function() {
+            const row = $(this).closest('.exercise-row');
+            row.prev('.exercise-row').before(row);
+            updateExerciseOrders();
+        });
+
+        $(document).on('click', '.move-down', function() {
+            const row = $(this).closest('.exercise-row');
+            row.next('.exercise-row').after(row);
+            updateExerciseOrders();
+        });
+
+        function updateExerciseOrders() {
+            $('#exercisesList .exercise-row').each(function(index) {
+                $(this).find('.exercise-order').val(index + 1);
+                
+                // Update input names
+                $(this).find('input, textarea').each(function() {
+                    const name = $(this).attr('name');
+                    if (name && name.includes('Template.Exercises[')) {
+                        const newName = name.replace(/Template\.Exercises\[\d+\]/, `Template.Exercises[${index}]`);
+                        $(this).attr('name', newName);
+                    }
+                });
+            });
+        }
+
+        // Search exercises
+        $('#exerciseSearch').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('.exercise-item').each(function() {
+                const exerciseName = $(this).data('exercise-name').toLowerCase();
+                if (exerciseName.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    </script>
+}

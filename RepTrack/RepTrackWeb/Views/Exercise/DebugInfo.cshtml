@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Database Debug Info";
+}
+
+<h2>Exercise Database Debug Information</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Exercise Counts</h5>
+        <p><strong>Total Exercises:</strong> @ViewBag.TotalExercises</p>
+        <p><strong>System Exercises:</strong> @ViewBag.SystemExerciseCount</p>
+        <p><strong>User Exercises:</strong> @ViewBag.UserExerciseCount</p>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Sample System Exercises (First 10)</h5>
+        @if (ViewBag.SystemExercises != null && ((List<string>)ViewBag.SystemExercises).Any())
+        {
+            <ul>
+                @foreach (string exercise in (List<string>)ViewBag.SystemExercises)
+                {
+                    <li>@exercise</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-warning">No system exercises found!</p>
+        }
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Sample User Exercises (First 10)</h5>
+        @if (ViewBag.UserExercises != null && ((List<string>)ViewBag.UserExercises).Any())
+        {
+            <ul>
+                @foreach (string exercise in (List<string>)ViewBag.UserExercises)
+                {
+                    <li>@exercise</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">No user exercises found.</p>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="@Url.Action("Index")" class="btn btn-primary">Back to Exercise List</a>
+</div>

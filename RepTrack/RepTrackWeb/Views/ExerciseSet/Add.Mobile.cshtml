@@ -1,0 +1,302 @@
+@model RepTrackWeb.Models.ExerciseSet.AddSetViewModel
+
+@{
+    ViewData["Title"] = "Add Set";
+    ViewData["ShowMobileOptimized"] = true;
+}
+
+<div class="container-fluid mobile-container">
+    <div class="mobile-header">
+        <button type="button" class="btn btn-link mobile-back-btn" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="mobile-title">Add Set</h2>
+    </div>
+
+    <div class="mobile-exercise-info">
+        <h3>@Model.ExerciseName</h3>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mobile-alert" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="Add" method="post" class="mobile-form">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="WorkoutExerciseId" />
+        <input type="hidden" asp-for="WorkoutId" />
+        <input type="hidden" asp-for="ExerciseName" />
+
+        <div class="mobile-input-group">
+            <label asp-for="Type" class="mobile-label">Set Type</label>
+            <select asp-for="Type" asp-items="Model.SetTypes" class="form-select mobile-select"></select>
+            <span asp-validation-for="Type" class="mobile-error"></span>
+        </div>
+
+        <div class="mobile-weight-reps-grid">
+            <div class="mobile-input-group">
+                <label asp-for="Weight" class="mobile-label">Weight (kg)</label>
+                <input asp-for="Weight" class="form-control mobile-number-input" type="number" step="0.25" inputmode="decimal" />
+                <span asp-validation-for="Weight" class="mobile-error"></span>
+            </div>
+            <div class="mobile-input-group">
+                <label asp-for="Repetitions" class="mobile-label">Reps</label>
+                <input asp-for="Repetitions" class="form-control mobile-number-input" type="number" inputmode="numeric" />
+                <span asp-validation-for="Repetitions" class="mobile-error"></span>
+            </div>
+        </div>
+
+        <div class="mobile-input-group">
+            <label asp-for="RPE" class="mobile-label">RPE: <span id="rpeValue">@Model.RPE</span></label>
+            <div class="mobile-rpe-container">
+                <input asp-for="RPE" class="mobile-rpe-slider" type="range" min="0" max="10" step="0.5" 
+                       oninput="document.getElementById('rpeValue').textContent = this.value" />
+                <div class="rpe-labels">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                </div>
+            </div>
+            <span asp-validation-for="RPE" class="mobile-error"></span>
+        </div>
+
+        <div class="mobile-checkbox-group">
+            <label class="mobile-checkbox-label">
+                <input asp-for="IsCompleted" class="mobile-checkbox" />
+                <span class="mobile-checkbox-text">Mark as completed</span>
+            </label>
+        </div>
+
+        <div class="mobile-action-buttons">
+            <button type="submit" class="btn btn-primary mobile-btn-primary">Add Set</button>
+            <button type="submit" class="btn btn-success mobile-btn-secondary" name="addAnother" value="true">Add & Next</button>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .mobile-container {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: var(--bs-primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .mobile-back-btn {
+            color: white;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-right: 15px;
+        }
+
+        .mobile-title {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .mobile-exercise-info {
+            padding: 15px;
+            background: var(--bs-light);
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+
+        .mobile-exercise-info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--bs-dark);
+        }
+
+        .mobile-form {
+            padding: 20px 15px;
+        }
+
+        .mobile-input-group {
+            margin-bottom: 25px;
+        }
+
+        .mobile-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--bs-dark);
+            font-size: 1rem;
+        }
+
+        .mobile-select,
+        .mobile-number-input {
+            font-size: 1.1rem;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid var(--bs-border-color);
+            min-height: 50px;
+        }
+
+        .mobile-weight-reps-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .mobile-rpe-container {
+            position: relative;
+        }
+
+        .mobile-rpe-slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bs-light);
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .mobile-rpe-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            background: var(--bs-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .rpe-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: var(--bs-secondary);
+        }
+
+        .mobile-checkbox-group {
+            margin: 30px 0;
+        }
+
+        .mobile-checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            border: 2px solid var(--bs-border-color);
+            border-radius: 8px;
+            background: var(--bs-light);
+        }
+
+        .mobile-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        .mobile-checkbox-text {
+            font-size: 1rem;
+            color: var(--bs-dark);
+        }
+
+        .mobile-action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid var(--bs-border-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mobile-btn-primary,
+        .mobile-btn-secondary {
+            font-size: 1.1rem;
+            padding: 12px;
+            border-radius: 8px;
+            min-height: 50px;
+            font-weight: 600;
+        }
+
+        .mobile-error {
+            color: var(--bs-danger);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .mobile-alert {
+            margin: 15px;
+            border-radius: 8px;
+        }
+
+        /* Add bottom padding to prevent buttons from covering content */
+        body {
+            padding-bottom: 100px;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Focus optimization for mobile
+            $('input[type="number"]').on('focus', function() {
+                $(this).select();
+            });
+
+            // Quick weight increment buttons
+            $('.mobile-number-input[asp-for="Weight"]').after(`
+                <div class="quick-increment-buttons mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustWeight(-2.5)">-2.5</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustWeight(-1.25)">-1.25</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustWeight(1.25)">+1.25</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustWeight(2.5)">+2.5</button>
+                </div>
+            `);
+
+            // Quick rep buttons
+            $('.mobile-number-input[asp-for="Repetitions"]').after(`
+                <div class="quick-increment-buttons mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustReps(-1)">-1</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setReps(8)">8</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setReps(10)">10</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setReps(12)">12</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adjustReps(1)">+1</button>
+                </div>
+            `);
+        });
+
+        function adjustWeight(amount) {
+            const input = $('input[asp-for="Weight"]');
+            const current = parseFloat(input.val()) || 0;
+            input.val((current + amount).toFixed(2));
+        }
+
+        function adjustReps(amount) {
+            const input = $('input[asp-for="Repetitions"]');
+            const current = parseInt(input.val()) || 0;
+            input.val(Math.max(0, current + amount));
+        }
+
+        function setReps(value) {
+            $('input[asp-for="Repetitions"]').val(value);
+        }
+    </script>
+}

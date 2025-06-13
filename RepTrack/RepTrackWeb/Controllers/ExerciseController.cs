@@ -152,5 +152,21 @@ namespace RepTrackWeb.Controllers
 
             return View(model);
         }
+
+        // DEBUG: Temporary action to check database content
+        public async Task<IActionResult> Debug()
+        {
+            var allExercises = await _exerciseService.GetAllExercisesAsync();
+            var systemExercises = allExercises.Where(e => e.IsSystemExercise).ToList();
+            var userExercises = allExercises.Where(e => !e.IsSystemExercise).ToList();
+            
+            ViewBag.SystemExerciseCount = systemExercises.Count;
+            ViewBag.UserExerciseCount = userExercises.Count;
+            ViewBag.SystemExercises = systemExercises.Take(10).Select(e => $"{e.Name} ({e.PrimaryMuscleGroup})").ToList();
+            ViewBag.UserExercises = userExercises.Take(10).Select(e => $"{e.Name} ({e.PrimaryMuscleGroup})").ToList();
+            ViewBag.TotalExercises = allExercises.Count();
+            
+            return View("DebugInfo");
+        }
     }
 }

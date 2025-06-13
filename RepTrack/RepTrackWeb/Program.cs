@@ -5,11 +5,13 @@ using RepTrackBusiness.Interfaces;
 using RepTrackBusiness.Mapper;
 using RepTrackBusiness.Services;
 using RepTrackData;
+using RepTrackData.Interfaces;
 using RepTrackData.Repositories;
 using RepTrackDomain.Interfaces;
 using RepTrackDomain.Models;
 using RepTrackWeb.Extensions;
 using RepTrackWeb.Middleware;
+using RepTrackWeb.Services;
 
 namespace RepTrackWeb
 {
@@ -46,20 +48,21 @@ namespace RepTrackWeb
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
             builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
-            builder.Services.AddScoped<IWorkoutExerciseRepository, WorkoutExerciseRepository>();
-            builder.Services.AddScoped<IExerciseSetRepository, ExerciseSetRepository>();
+            builder.Services.AddScoped<IWorkoutExerciseRepository, WorkoutExerciseRepository>();            builder.Services.AddScoped<IExerciseSetRepository, ExerciseSetRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-            builder.Services.AddScoped<IGoalRepository, GoalRepository>();// Register services for dependency injection
+            builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+            builder.Services.AddScoped<IWorkoutTemplateRepository, WorkoutTemplateRepository>();// Register services for dependency injection
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
-            builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
-            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IGoalService, GoalService>();
-            builder.Services.AddHostedService<NotificationBackgroundService>();
-
-            // Register email sender for ASP.NET Identity
+            builder.Services.AddScoped<IWorkoutTemplateService, WorkoutTemplateService>();
+            builder.Services.AddHostedService<NotificationBackgroundService>();            // Register email sender for ASP.NET Identity
             builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+            // Register device detection service
+            builder.Services.AddScoped<IDeviceDetectionService, DeviceDetectionService>();
 
             builder.Services.AddResponseCompression(options =>
             {

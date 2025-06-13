@@ -18,14 +18,14 @@ namespace RepTrackData
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-        }
-
-        public DbSet<WorkoutSession> WorkoutSessions { get; set; }
+        }        public DbSet<WorkoutSession> WorkoutSessions { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<ExerciseSet> ExerciseSets { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Goal> Goals { get; set; }
+        public DbSet<WorkoutTemplate> WorkoutTemplates { get; set; }
+        public DbSet<WorkoutTemplateExercise> WorkoutTemplateExercises { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -166,9 +166,53 @@ namespace RepTrackData
                     .HasForeignKey(g => g.TargetExerciseId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Indexes for performance
-                entity.HasIndex(g => new { g.UserId, g.IsCompleted });
+                // Indexes for performance                entity.HasIndex(g => new { g.UserId, g.IsCompleted });
                 entity.HasIndex(g => g.TargetDate);
+            });
+
+            // WorkoutTemplate configuration
+            builder.Entity<WorkoutTemplate>(entity =>
+            {
+                entity.HasKey(wt => wt.Id);
+                entity.Property(wt => wt.Name).IsRequired().HasMaxLength(100);
+                entity.Property(wt => wt.Description).HasMaxLength(500);
+                entity.Property(wt => wt.Tags).HasMaxLength(200);
+
+                // Configure relationship with the user who created the template
+                entity.HasOne(wt => wt.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(wt => wt.CreatedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes for performance
+                entity.HasIndex(wt => wt.CreatedByUserId);
+                entity.HasIndex(wt => wt.IsPublic);
+                entity.HasIndex(wt => wt.WorkoutType);
+                entity.HasIndex(wt => wt.IsSystemTemplate);
+            });
+
+            // WorkoutTemplateExercise configuration
+            builder.Entity<WorkoutTemplateExercise>(entity =>
+            {
+                entity.HasKey(wte => wte.Id);
+                entity.Property(wte => wte.Notes).HasMaxLength(200);
+                entity.Property(wte => wte.RecommendedReps).HasMaxLength(20);
+
+                // Configure relationships
+                entity.HasOne(wte => wte.WorkoutTemplate)
+                    .WithMany(wt => wt.Exercises)
+                    .HasForeignKey(wte => wte.WorkoutTemplateId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wte => wte.Exercise)
+                    .WithMany()
+                    .HasForeignKey(wte => wte.ExerciseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes for performance
+                entity.HasIndex(wte => wte.WorkoutTemplateId);
+                entity.HasIndex(wte => wte.ExerciseId);
+                entity.HasIndex(wte => wte.Order);
             });
         }
     }

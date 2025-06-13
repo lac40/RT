@@ -8,11 +8,13 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
+using RepTrackWeb.Controllers.Base;
+using RepTrackWeb.Services;
 
 namespace RepTrackWeb.Controllers
 {
     [Authorize]
-    public class ExerciseSetController : Controller
+    public class ExerciseSetController : DeviceAwareController
     {
         private readonly IWorkoutSessionService _workoutService;
         private readonly IExerciseSetService _exerciseSetService;
@@ -21,12 +23,13 @@ namespace RepTrackWeb.Controllers
         public ExerciseSetController(
             IWorkoutSessionService workoutService,
             IExerciseSetService exerciseSetService,
-            IMapper mapper)
+            IMapper mapper,
+            IDeviceDetectionService deviceDetectionService) : base(deviceDetectionService)
         {
             _workoutService = workoutService;
             _exerciseSetService = exerciseSetService;
             _mapper = mapper;
-        }        // GET: ExerciseSet/Add/5 (5 is the workout exercise ID)
+        }// GET: ExerciseSet/Add/5 (5 is the workout exercise ID)
         public async Task<IActionResult> Add(int workoutExerciseId, int workoutId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,9 +42,7 @@ namespace RepTrackWeb.Controllers
             // Find the exercise in the workout
             var workoutExercise = workout.Exercises.FirstOrDefault(e => e.Id == workoutExerciseId);
             if (workoutExercise == null)
-                return NotFound();
-
-            var model = new AddSetViewModel
+                return NotFound();            var model = new AddSetViewModel
             {
                 WorkoutExerciseId = workoutExerciseId,
                 WorkoutId = workoutId,
@@ -50,7 +51,7 @@ namespace RepTrackWeb.Controllers
                 // Order is now handled automatically
             };
 
-            return View(model);
+            return DeviceView("Add", model);
         }        // POST: ExerciseSet/Add
         [HttpPost]
         [ValidateAntiForgeryToken]

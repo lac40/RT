@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 /RepTrack/RepTrackWeb/appsettings.Development.json
+RepTrack/BUILT_IN_CONTENT_EXPANSION.md
+RepTrack/PROJECT_COMPLETION_SUMMARY.md
+RepTrack/VERIFICATION_CHECKLIST.md

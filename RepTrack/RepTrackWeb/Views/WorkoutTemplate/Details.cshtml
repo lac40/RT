@@ -1,0 +1,228 @@
+@model RepTrackWeb.Models.WorkoutTemplate.WorkoutTemplateDetailsViewModel
+@{
+    ViewData["Title"] = Model.Template.Name;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>@Model.Template.Name</h2>
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-@(GetWorkoutTypeBadgeClass(Model.Template.WorkoutType)) mr-2">
+                            @Model.Template.WorkoutType
+                        </span>
+                        @if (Model.Template.IsPublic)
+                        {
+                            <span class="badge badge-info mr-2">Public</span>
+                        }
+                        <small class="text-muted">
+                            Created: @Model.Template.CreatedAt.ToString("MMM dd, yyyy")
+                        </small>
+                    </div>
+                </div>
+                <div class="btn-group" role="group">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Templates
+                    </a>
+                    @if (Model.CanEdit)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Template.Id" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    }
+                    @if (Model.CanDelete)
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.Template.Id" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Template Information -->
+                <div class="col-lg-8">
+                    <!-- Description -->
+                    @if (!string.IsNullOrEmpty(Model.Template.Description))
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Description</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">@Model.Template.Description</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Exercises -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-dumbbell"></i> Exercises (@Model.Template.Exercises.Count)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Template.Exercises.Any())
+                            {
+                                <div class="list-group">
+                                    @foreach (var exercise in Model.Template.Exercises.OrderBy(e => e.Order))
+                                    {
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">
+                                                        <span class="badge badge-light mr-2">@exercise.Order</span>
+                                                        @exercise.ExerciseName
+                                                    </h6>
+                                                    @if (!string.IsNullOrEmpty(exercise.Notes))
+                                                    {
+                                                        <p class="mb-1 text-muted">@exercise.Notes</p>
+                                                    }
+                                                    <div class="row">
+                                                        @if (exercise.RecommendedSets.HasValue)
+                                                        {
+                                                            <div class="col-auto">
+                                                                <small class="text-muted">
+                                                                    <strong>Sets:</strong> @exercise.RecommendedSets
+                                                                </small>
+                                                            </div>
+                                                        }                                                        @if (!string.IsNullOrEmpty(exercise.RecommendedReps))
+                                                        {
+                                                            <div class="col-auto">
+                                                                <small class="text-muted">
+                                                                    <strong>Reps:</strong> @exercise.RecommendedReps
+                                                                </small>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-dumbbell fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">No exercises added yet</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Quick Actions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="UseTemplate" asp-route-id="@Model.Template.Id" method="post" class="mb-3">
+                                @Html.AntiForgeryToken()
+                                <div class="form-group">
+                                    <label for="sessionDate">Workout Date</label>
+                                    <input type="date" class="form-control" name="sessionDate" value="@DateTime.Today.ToString("yyyy-MM-dd")">
+                                </div>
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fas fa-play"></i> Start Workout
+                                </button>
+                            </form>
+
+                            <form asp-action="Duplicate" asp-route-id="@Model.Template.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="form-group">
+                                    <label for="newName">Template Name</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           name="newName" 
+                                           value="@Model.Template.Name Copy" 
+                                           required>
+                                </div>
+                                <button type="submit" class="btn btn-outline-primary btn-block">
+                                    <i class="fas fa-copy"></i> Duplicate Template
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Template Stats -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Template Info</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-6">Exercises:</dt>
+                                <dd class="col-sm-6">@Model.Template.Exercises.Count</dd>
+                                
+                                <dt class="col-sm-6">Type:</dt>
+                                <dd class="col-sm-6">@Model.Template.WorkoutType</dd>
+                                
+                                <dt class="col-sm-6">Visibility:</dt>
+                                <dd class="col-sm-6">
+                                    @if (Model.Template.IsPublic)
+                                    {
+                                        <span class="text-success">Public</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Private</span>
+                                    }
+                                </dd>
+                                
+                                <dt class="col-sm-6">Created:</dt>
+                                <dd class="col-sm-6">@Model.Template.CreatedAt.ToString("MMM dd, yyyy")</dd>
+                                
+                                @if (Model.Template.UpdatedAt.HasValue)
+                                {
+                                    <dt class="col-sm-6">Modified:</dt>
+                                    <dd class="col-sm-6">@Model.Template.UpdatedAt.Value.ToString("MMM dd, yyyy")</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    @if (Model.Template.Tags?.Any() == true)
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-tags"></i> Tags</h5>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var tag in Model.Template.Tags)
+                                {
+                                    <span class="badge badge-secondary mr-1 mb-1">@tag</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {    string GetWorkoutTypeBadgeClass(RepTrackDomain.Enums.WorkoutType workoutType)
+    {
+        return workoutType switch
+        {
+            RepTrackDomain.Enums.WorkoutType.Push => "primary",
+            RepTrackDomain.Enums.WorkoutType.Pull => "info",
+            RepTrackDomain.Enums.WorkoutType.Legs => "warning",
+            RepTrackDomain.Enums.WorkoutType.UpperBody => "success",
+            RepTrackDomain.Enums.WorkoutType.LowerBody => "secondary",
+            RepTrackDomain.Enums.WorkoutType.FullBody => "primary",
+            RepTrackDomain.Enums.WorkoutType.Cardio => "success",
+            RepTrackDomain.Enums.WorkoutType.Custom => "dark",
+            _ => "dark"
+        };
+    }
+}
