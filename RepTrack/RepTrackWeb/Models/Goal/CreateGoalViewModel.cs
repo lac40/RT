@@ -33,10 +33,8 @@ namespace RepTrackWeb.Models.Goal
 
         // Strength Goal Properties
         [Display(Name = "Exercise")]
-        public int? TargetExerciseId { get; set; }
-
-        [Display(Name = "Target Weight (kg)")]
-        [Range(0, 999.99)]
+        public int? TargetExerciseId { get; set; }        [Display(Name = "Target Weight (kg)")]
+        [Range(0, 999.75)]
         public decimal? TargetWeight { get; set; }
 
         [Display(Name = "Target Reps")]

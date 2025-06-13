@@ -16,11 +16,9 @@ namespace RepTrackWeb.Models.ExerciseSet
 
         [Required]
         [Display(Name = "Set Type")]
-        public SetType Type { get; set; }
-
-        [Required]
+        public SetType Type { get; set; }        [Required]
         [Display(Name = "Weight")]
-        [Range(0, 999.99)]
+        [Range(0, 999.75)]
         public decimal Weight { get; set; }
 
         [Required]
