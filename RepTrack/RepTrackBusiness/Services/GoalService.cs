@@ -257,26 +257,41 @@ namespace RepTrackBusiness.Services
             if (!goal.TargetExerciseId.HasValue || !goal.TargetWeight.HasValue || !goal.TargetReps.HasValue)
                 return 0;
 
-            // Get all workouts since the goal was created
+            // Get all workouts - we want to consider all historical data for goal progress
             var workouts = await _unitOfWork.WorkoutSessions.GetUserWorkoutsAsync(goal.UserId);
-            var relevantWorkouts = workouts.Where(w => w.SessionDate >= goal.StartDate);
+            var relevantWorkouts = workouts; // Consider all workouts, not just those after goal creation
+
+            Console.WriteLine($"DEBUG: Calculating strength progress for goal {goal.Id}");
+            Console.WriteLine($"DEBUG: Target: {goal.TargetWeight}kg x {goal.TargetReps} reps for exercise {goal.TargetExerciseId}");
+            Console.WriteLine($"DEBUG: Found {workouts.Count()} total workouts, {relevantWorkouts.Count()} relevant workouts");
 
             decimal maxAchievedWeight = 0;
             int maxRepsAtTargetWeight = 0;
-            bool targetAchieved = false;
-
-            foreach (var workout in relevantWorkouts)
+            bool targetAchieved = false;            foreach (var workout in relevantWorkouts)
             {
                 var fullWorkout = await _unitOfWork.WorkoutSessions.GetWorkoutWithDetailsAsync(workout.Id);
                 if (fullWorkout == null) continue;
+
+                Console.WriteLine($"DEBUG: Checking workout {workout.Id} from {workout.SessionDate}");
 
                 var exerciseInWorkout = fullWorkout.Exercises
                     .FirstOrDefault(e => e.ExerciseId == goal.TargetExerciseId.Value);
 
                 if (exerciseInWorkout != null)
                 {
+                    Console.WriteLine($"DEBUG: Found exercise in workout, has {exerciseInWorkout.Sets.Count} sets");
+                    
                     foreach (var set in exerciseInWorkout.Sets)
                     {
+                        Console.WriteLine($"DEBUG: Set - Weight: {set.Weight}kg, Reps: {set.Repetitions}, Completed: {set.IsCompleted}");
+                        
+                        // Only consider completed sets for goal progress
+                        if (!set.IsCompleted)
+                        {
+                            Console.WriteLine($"DEBUG: Skipping incomplete set");
+                            continue;
+                        }
+
                         // Track max weight achieved
                         if (set.Weight > maxAchievedWeight)
                             maxAchievedWeight = set.Weight;
@@ -284,6 +299,7 @@ namespace RepTrackBusiness.Services
                         // Check if target is achieved: weight >= target AND reps >= target
                         if (set.Weight >= goal.TargetWeight.Value && set.Repetitions >= goal.TargetReps.Value)
                         {
+                            Console.WriteLine($"DEBUG: TARGET ACHIEVED! {set.Weight}kg x {set.Repetitions} >= {goal.TargetWeight}kg x {goal.TargetReps}");
                             targetAchieved = true;
                         }
 
@@ -292,11 +308,16 @@ namespace RepTrackBusiness.Services
                             maxRepsAtTargetWeight = set.Repetitions;
                     }
                 }
-            }
-
-            // If target is achieved, return 100%
+                else
+                {
+                    Console.WriteLine($"DEBUG: Exercise {goal.TargetExerciseId} not found in workout");
+                }
+            }            // If target is achieved, return 100%
             if (targetAchieved)
+            {
+                Console.WriteLine($"DEBUG: Target achieved, returning 100% progress");
                 return 100;
+            }
 
             // Calculate progress: 70% weight, 30% reps
             decimal weightProgress = goal.TargetWeight.Value > 0
@@ -307,7 +328,11 @@ namespace RepTrackBusiness.Services
                 ? Math.Min(100, ((decimal)maxRepsAtTargetWeight / goal.TargetReps.Value) * 100)
                 : 0;
 
-            return (weightProgress * 0.7m) + (repsProgress * 0.3m);
+            var totalProgress = (weightProgress * 0.7m) + (repsProgress * 0.3m);
+            Console.WriteLine($"DEBUG: Max weight: {maxAchievedWeight}, Max reps at target: {maxRepsAtTargetWeight}");
+            Console.WriteLine($"DEBUG: Weight progress: {weightProgress}%, Reps progress: {repsProgress}%, Total: {totalProgress}%");
+
+            return totalProgress;
         }
 
         /// <summary>
@@ -329,11 +354,12 @@ namespace RepTrackBusiness.Services
                 if (fullWorkout == null) continue;
 
                 var exerciseInWorkout = fullWorkout.Exercises
-                    .FirstOrDefault(e => e.ExerciseId == goal.TargetExerciseId.Value);
-
-                if (exerciseInWorkout != null)
+                    .FirstOrDefault(e => e.ExerciseId == goal.TargetExerciseId.Value);                if (exerciseInWorkout != null)
                 {
-                    var workoutVolume = exerciseInWorkout.Sets.Sum(s => s.Weight * s.Repetitions);
+                    // Only consider completed sets for volume calculation
+                    var workoutVolume = exerciseInWorkout.Sets
+                        .Where(s => s.IsCompleted)
+                        .Sum(s => s.Weight * s.Repetitions);
                     if (workoutVolume > maxVolumeAchieved)
                         maxVolumeAchieved = workoutVolume;
                 }

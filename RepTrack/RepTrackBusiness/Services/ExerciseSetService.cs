@@ -124,7 +124,6 @@ namespace RepTrackBusiness.Services
 
             await _unitOfWork.CompleteAsync();
         }
-
         public async Task<ExerciseSet> CompleteSetAsync(int setId)
         {
             var set = await _unitOfWork.ExerciseSets.GetByIdAsync(setId);
@@ -133,7 +132,26 @@ namespace RepTrackBusiness.Services
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
             set.MarkAsCompleted();
-            await _unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteAsync();            // Update goal progress after completing a set
+            try
+            {
+                var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdAsync(set.WorkoutExerciseId);
+                if (workoutExercise != null)
+                {
+                    var workout = await _unitOfWork.WorkoutSessions.GetByIdAsync(workoutExercise.WorkoutSessionId);
+                    if (workout != null)
+                    {
+                        Console.WriteLine($"DEBUG: Triggering goal progress update for user {workout.UserId} after completing set {setId}");
+                        await _goalService.UpdateUserGoalProgressAsync(workout.UserId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DEBUG: Error updating goal progress: {ex.Message}");
+                // Goal progress update should not fail the set completion
+                // Log the error but continue
+            }
 
             return set;
         }

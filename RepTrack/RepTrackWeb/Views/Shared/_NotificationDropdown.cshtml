@@ -1,27 +1,30 @@
-﻿<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fas fa-bell"></i>
-        <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-            <span id="notificationCount">0</span>
-        </span>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
-        <div class="dropdown-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">Notifications</h6>
-            <a href="#" id="markAllReadLink" class="small text-muted" style="display: none;">Mark all as read</a>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div id="notificationList" class="notification-list">
-            <div class="text-center p-3">
-                <div class="spinner-border spinner-border-sm" role="status">
-                    <span class="visually-hidden">Loading...</span>
+﻿@if (User.Identity?.IsAuthenticated == true)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bell"></i>
+            <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                <span id="notificationCount">0</span>
+            </span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+            <div class="dropdown-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Notifications</h6>
+                <a href="#" id="markAllReadLink" class="small text-muted" style="display: none;">Mark all as read</a>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div id="notificationList" class="notification-list">
+                <div class="text-center p-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item text-center small" asp-controller="Notification" asp-action="Index">View All Notifications</a>
         </div>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item text-center small" asp-controller="Notification" asp-action="Index">View All Notifications</a>
-    </div>
-</li>
+    </li>
+}
 
 <style>
     .notification-dropdown {
@@ -66,26 +69,45 @@
         }
 </style>
 
-<script>
-    // Notification polling functionality
-    let notificationPollInterval;    function loadNotifications() {
+<script>    // Notification polling functionality
+    let notificationPollInterval;
+
+    function loadNotifications() {
+        // Show loading state
+        const list = $('#notificationList');
+        list.html('<div class="text-center p-3"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        
         $.get('@Url.Action("GetNotifications", "Notification")', function(data) {
             updateNotificationUI(data);
-        }).fail(function() {
-            // Handle error case - show no notifications message
+        }).fail(function(xhr) {
+            // Handle error case - show appropriate message
             const list = $('#notificationList');
             list.empty();
-            list.append('<div class="text-center p-3 text-muted">No notifications</div>');
+            
+            if (xhr.status === 401) {
+                // User not authenticated
+                list.append('<div class="text-center p-3 text-muted">Please log in to view notifications</div>');
+            } else {
+                // Other error - assume no notifications
+                list.append('<div class="text-center p-3 text-muted">No notifications</div>');
+            }
+            
+            // Hide badge and mark all link
             const badge = $('#notificationBadge');
+            const markAllLink = $('#markAllReadLink');
             badge.hide();
+            markAllLink.hide();
         });
-    }function updateNotificationUI(data) {
+    }    function updateNotificationUI(data) {
         const badge = $('#notificationBadge');
         const count = $('#notificationCount');
         const list = $('#notificationList');
         const markAllLink = $('#markAllReadLink');
 
-        // Update badge
+        // Clear loading state
+        list.empty();
+
+        // Update badge and mark all link visibility
         if (data.unreadCount > 0) {
             count.text(data.unreadCount);
             badge.show();
@@ -96,8 +118,6 @@
         }
 
         // Update notification list
-        list.empty();
-
         if (data.notifications.length === 0) {
             list.append('<div class="text-center p-3 text-muted">No notifications</div>');
         } else {
@@ -165,10 +185,11 @@
         if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 
         return date.toLocaleDateString();
-    }
-
-    function markNotificationAsRead(notificationId) {
+    }    function markNotificationAsRead(notificationId) {
         $.post('@Url.Action("MarkAsRead", "Notification")', { id: notificationId }, function() {
+            loadNotifications();
+        }).fail(function() {
+            // If marking as read fails, still reload to show current state
             loadNotifications();
         });
     }
@@ -178,17 +199,19 @@
         e.preventDefault();
         $.post('@Url.Action("MarkAllAsRead", "Notification")', function() {
             loadNotifications();
+        }).fail(function() {
+            // If marking all as read fails, still reload to show current state
+            loadNotifications();
         });
     });
 
     // Global function to update notification count (can be called from other pages)
     window.updateNavbarNotificationCount = function() {
         loadNotifications();
-    };
-
-    // Initialize notifications when page loads
+    };    // Initialize notifications when page loads
     $(document).ready(function() {
-        if ($('#notificationDropdown').length) {
+        // Only initialize if notification dropdown exists (user is authenticated)
+        if ($('#notificationDropdown').length > 0) {
             loadNotifications();
 
             // Poll for new notifications every 30 seconds
