@@ -1,4 +1,5 @@
 ﻿using Moq;
+using RepTrackBusiness.Interfaces;
 using RepTrackBusiness.Services;
 using RepTrackCommon.Exceptions;
 using RepTrackDomain.Enums;
@@ -11,13 +12,13 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace RepTrackTests.Business.Services
-{
-    public class WorkoutSessionServiceTests
+{    public class WorkoutSessionServiceTests
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IWorkoutSessionRepository> _mockWorkoutRepo;
         private readonly Mock<IExerciseRepository> _mockExerciseRepo;
         private readonly Mock<IWorkoutExerciseRepository> _mockWorkoutExerciseRepo;
+        private readonly Mock<IGoalService> _mockGoalService;
         private readonly WorkoutSessionService _workoutService;
 
         private readonly string _userId = "test-user-id";
@@ -29,13 +30,14 @@ namespace RepTrackTests.Business.Services
             _mockWorkoutRepo = new Mock<IWorkoutSessionRepository>();
             _mockExerciseRepo = new Mock<IExerciseRepository>();
             _mockWorkoutExerciseRepo = new Mock<IWorkoutExerciseRepository>();
+            _mockGoalService = new Mock<IGoalService>();
 
             // Set up unit of work to return our mocked repositories
             _mockUnitOfWork.Setup(uow => uow.WorkoutSessions).Returns(_mockWorkoutRepo.Object);
             _mockUnitOfWork.Setup(uow => uow.Exercises).Returns(_mockExerciseRepo.Object);
             _mockUnitOfWork.Setup(uow => uow.WorkoutExercises).Returns(_mockWorkoutExerciseRepo.Object);
 
-            _workoutService = new WorkoutSessionService(_mockUnitOfWork.Object);
+            _workoutService = new WorkoutSessionService(_mockUnitOfWork.Object, _mockGoalService.Object);
         }
 
         [Fact]

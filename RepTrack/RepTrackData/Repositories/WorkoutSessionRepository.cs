@@ -13,11 +13,11 @@ namespace RepTrackData.Repositories
     {
         public WorkoutSessionRepository(ApplicationDbContext context) : base(context)
         {
-        }
-
-        public async Task<IEnumerable<WorkoutSession>> GetUserWorkoutsAsync(string userId)
+        }        public async Task<IEnumerable<WorkoutSession>> GetUserWorkoutsAsync(string userId)
         {
             return await _dbSet
+                .Include(w => w.Exercises)
+                    .ThenInclude(e => e.Exercise)
                 .Where(w => w.UserId == userId)
                 .OrderByDescending(w => w.SessionDate)
                 .ToListAsync();

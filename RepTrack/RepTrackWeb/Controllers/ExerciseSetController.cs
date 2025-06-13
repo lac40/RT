@@ -26,12 +26,12 @@ namespace RepTrackWeb.Controllers
             _workoutService = workoutService;
             _exerciseSetService = exerciseSetService;
             _mapper = mapper;
-        }
-
-        // GET: ExerciseSet/Add/5 (5 is the workout exercise ID)
+        }        // GET: ExerciseSet/Add/5 (5 is the workout exercise ID)
         public async Task<IActionResult> Add(int workoutExerciseId, int workoutId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
             // Verify workout exists and user can access it
             var workout = await _workoutService.GetWorkoutByIdAsync(workoutId, userId);
@@ -51,12 +51,10 @@ namespace RepTrackWeb.Controllers
             };
 
             return View(model);
-        }
-
-        // POST: ExerciseSet/Add
+        }        // POST: ExerciseSet/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(AddSetViewModel model)
+        public async Task<IActionResult> Add(AddSetViewModel model, string? addAnother)
         {
             if (ModelState.IsValid)
             {
@@ -67,7 +65,28 @@ namespace RepTrackWeb.Controllers
                     model.Weight,
                     model.Repetitions,
                     model.RPE,
-                    model.IsCompleted);
+                    model.IsCompleted);                if (!string.IsNullOrEmpty(addAnother) && addAnother == "true")
+                {
+                    // Clear the form data and return to the same page
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (string.IsNullOrEmpty(userId))
+                        return Unauthorized();
+                        
+                    var workout = await _workoutService.GetWorkoutByIdAsync(model.WorkoutId, userId);
+                    var workoutExercise = workout.Exercises.FirstOrDefault(e => e.Id == model.WorkoutExerciseId);
+                    
+                    var newModel = new AddSetViewModel
+                    {
+                        WorkoutExerciseId = model.WorkoutExerciseId,
+                        WorkoutId = model.WorkoutId,
+                        ExerciseName = workoutExercise?.Exercise.Name,
+                        SetTypes = GetSetTypeSelectList()
+                        // Clear all input values by not setting them
+                    };
+
+                    TempData["SuccessMessage"] = "Set added successfully! Add another set below.";
+                    return View(newModel);
+                }
 
                 return RedirectToAction("Details", "WorkoutSession", new { id = model.WorkoutId });
             }
@@ -75,12 +94,12 @@ namespace RepTrackWeb.Controllers
             // If we got this far, something failed, redisplay form
             model.SetTypes = GetSetTypeSelectList();
             return View(model);
-        }
-
-        // GET: ExerciseSet/Edit/5
+        }        // GET: ExerciseSet/Edit/5
         public async Task<IActionResult> Edit(int id, int workoutId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
             // Verify workout exists and user can access it
             var workout = await _workoutService.GetWorkoutByIdAsync(workoutId, userId);

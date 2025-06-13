@@ -36,10 +36,9 @@
                             <option value="2">Frequency</option>
                         </select>
                         <span asp-validation-for="Type" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
+                    </div>                    <div class="col-md-4 mb-3">
                         <label asp-for="StartDate" class="form-label"></label>
-                        <input asp-for="StartDate" class="form-control" readonly />
+                        <input asp-for="StartDate" class="form-control" type="date" readonly />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -156,13 +155,12 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        $(document).ready(function() {
+    <script>        $(document).ready(function() {
             // Show/hide sections based on goal type
-            $('#goalType').change(function() {
-                const selectedType = $(this).val();
+            function updateGoalTypeDisplay() {
+                const selectedType = $('#goalType').val();
 
-                // Hide all sections
+                // Hide all sections first
                 $('.goal-type-section').hide();
 
                 // Clear required attributes
@@ -177,20 +175,31 @@
                     case '1': // Volume
                         $('#volumeSection').show();
                         $('.volume-required').prop('required', true);
-                        // Copy exercise selection to hidden field
-                        $('select[name="VolumeExerciseId"]').change(function() {
-                            $('#TargetExerciseId').val($(this).val());
-                        });
+                        // Copy exercise selection to hidden field for volume goals
                         break;
                     case '2': // Frequency
                         $('#frequencySection').show();
                         $('.frequency-required').prop('required', true);
                         break;
                 }
+            }
+
+            // Handle goal type change
+            $('#goalType').change(updateGoalTypeDisplay);
+
+            // Handle volume exercise selection
+            $('select[name="VolumeExerciseId"]').change(function() {
+                $('#TargetExerciseId').val($(this).val());
             });
 
-            // Trigger change event on page load
-            $('#goalType').trigger('change');
+            // Initialize display on page load
+            updateGoalTypeDisplay();
+
+            // Set minimum date for target date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const minDate = tomorrow.toISOString().split('T')[0];
+            $('input[name="TargetDate"]').attr('min', minDate);
         });
     </script>
 }

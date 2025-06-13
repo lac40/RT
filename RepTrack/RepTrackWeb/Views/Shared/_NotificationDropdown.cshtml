@@ -68,15 +68,18 @@
 
 <script>
     // Notification polling functionality
-    let notificationPollInterval;
-
-    function loadNotifications() {
+    let notificationPollInterval;    function loadNotifications() {
         $.get('@Url.Action("GetNotifications", "Notification")', function(data) {
             updateNotificationUI(data);
+        }).fail(function() {
+            // Handle error case - show no notifications message
+            const list = $('#notificationList');
+            list.empty();
+            list.append('<div class="text-center p-3 text-muted">No notifications</div>');
+            const badge = $('#notificationBadge');
+            badge.hide();
         });
-    }
-
-    function updateNotificationUI(data) {
+    }function updateNotificationUI(data) {
         const badge = $('#notificationBadge');
         const count = $('#notificationCount');
         const list = $('#notificationList');

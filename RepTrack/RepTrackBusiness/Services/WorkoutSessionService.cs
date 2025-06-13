@@ -9,14 +9,15 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Services
-{
-    public class WorkoutSessionService : IWorkoutSessionService
+{    public class WorkoutSessionService : IWorkoutSessionService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IGoalService _goalService;
 
-        public WorkoutSessionService(IUnitOfWork unitOfWork)
+        public WorkoutSessionService(IUnitOfWork unitOfWork, IGoalService goalService)
         {
             _unitOfWork = unitOfWork;
+            _goalService = goalService;
         }
 
         public async Task<WorkoutSession> CreateWorkoutAsync(string userId, DateTime sessionDate, WorkoutType sessionType, string notes)
@@ -67,14 +68,23 @@ namespace RepTrackBusiness.Services
 
             _unitOfWork.WorkoutSessions.Remove(workout);
             await _unitOfWork.CompleteAsync();
-        }
-
-        public async Task<WorkoutSession> CompleteWorkoutAsync(int workoutId, string userId)
+        }        public async Task<WorkoutSession> CompleteWorkoutAsync(int workoutId, string userId)
         {
             var workout = await GetWorkoutEntityByIdAsync(workoutId, userId);
 
             workout.MarkAsCompleted();
             await _unitOfWork.CompleteAsync();
+
+            // Update goal progress after completing workout
+            try
+            {
+                await _goalService.UpdateUserGoalProgressAsync(userId);
+            }
+            catch (Exception)
+            {
+                // Goal progress update should not fail the workout completion
+                // Log the error but continue
+            }
 
             return workout;
         }

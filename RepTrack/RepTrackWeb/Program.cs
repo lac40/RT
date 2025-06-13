@@ -42,22 +42,20 @@ namespace RepTrackWeb
             builder.Services.AddControllersWithViews();
 
             // Register AutoMapper
-            builder.Services.AddAutoMapper(typeof(MappingProfile), typeof(RepTrackWeb.Mapping.ViewModelMappingProfile));
-
-            // Register repositories
+            builder.Services.AddAutoMapper(typeof(MappingProfile), typeof(RepTrackWeb.Mapping.ViewModelMappingProfile));            // Register repositories
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
             builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
             builder.Services.AddScoped<IWorkoutExerciseRepository, WorkoutExerciseRepository>();
             builder.Services.AddScoped<IExerciseSetRepository, ExerciseSetRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-
-            // Register services for dependency injection
+            builder.Services.AddScoped<IGoalRepository, GoalRepository>();// Register services for dependency injection
             builder.Services.AddScoped<IWorkoutSessionService, WorkoutSessionService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<IExerciseSetService, ExerciseSetService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IGoalService, GoalService>();
             builder.Services.AddHostedService<NotificationBackgroundService>();
 
             // Register email sender for ASP.NET Identity

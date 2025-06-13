@@ -55,14 +55,18 @@ namespace RepTrackWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: Exercise/Create
-        [HttpPost]
+        // POST: Exercise/Create        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateExerciseViewModel model)
         {
             if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
                 var secondaryMuscleGroups = model.SecondaryMuscleGroups
                     .Select(m => (MuscleGroup)m)
                     .ToList();
@@ -87,7 +91,27 @@ namespace RepTrackWeb.Controllers
                     Value = ((int)m).ToString()
                 }).ToList();
 
-            return View(model);
+            return View(model);        }
+
+        // GET: Exercise/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var exerciseDto = await _exerciseService.GetExerciseByIdAsync(id);
+            if (exerciseDto == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = _mapper.Map<EditExerciseViewModel>(exerciseDto);
+            viewModel.MuscleGroups = Enum.GetValues(typeof(MuscleGroup))
+                .Cast<MuscleGroup>()
+                .Select(m => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = m.ToString(),
+                    Value = ((int)m).ToString()
+                }).ToList();
+
+            return View(viewModel);
         }
 
         // POST: Exercise/Edit/5
@@ -98,11 +122,14 @@ namespace RepTrackWeb.Controllers
             if (id != model.Id)
             {
                 return NotFound();
-            }
-
-            if (ModelState.IsValid)
+            }            if (ModelState.IsValid)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
                 var exerciseDto = await _exerciseService.UpdateExerciseAsync(
                     id,
                     model.Name,

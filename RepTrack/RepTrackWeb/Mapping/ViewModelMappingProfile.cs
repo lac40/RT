@@ -16,10 +16,9 @@ namespace RepTrackWeb.Mapping
             CreateMap<WorkoutSession, WorkoutSessionDetailViewModel>();
             CreateMap<WorkoutExercise, WorkoutSessionDetailViewModel.ExerciseViewModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Exercise.Name));
-            CreateMap<ExerciseSet, WorkoutSessionDetailViewModel.SetViewModel>();
-
-            CreateMap<Exercise, ExerciseListItemViewModel>();
+            CreateMap<ExerciseSet, WorkoutSessionDetailViewModel.SetViewModel>();            CreateMap<Exercise, ExerciseListItemViewModel>();
             CreateMap<Exercise, ExerciseDetailViewModel>();
+            CreateMap<Exercise, EditExerciseViewModel>();
         }
     }
 }

@@ -9,14 +9,15 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace RepTrackBusiness.Services
-{
-    public class ExerciseSetService : IExerciseSetService
+{    public class ExerciseSetService : IExerciseSetService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IGoalService _goalService;
 
-        public ExerciseSetService(IUnitOfWork unitOfWork)
+        public ExerciseSetService(IUnitOfWork unitOfWork, IGoalService goalService)
         {
             _unitOfWork = unitOfWork;
+            _goalService = goalService;
         }
 
         public async Task<ExerciseSet> AddSetToExerciseAsync(int workoutExerciseId, SetType type, decimal weight,
@@ -42,11 +43,24 @@ namespace RepTrackBusiness.Services
                 nextOrder);
 
             if (isCompleted)
-                set.MarkAsCompleted();
-
-            // Add the set to the database
+                set.MarkAsCompleted();            // Add the set to the database
             await _unitOfWork.ExerciseSets.AddAsync(set);
             await _unitOfWork.CompleteAsync();
+
+            // Update goal progress after adding a set
+            try
+            {
+                var workout = await _unitOfWork.WorkoutSessions.GetByIdAsync(workoutExercise.WorkoutSessionId);
+                if (workout != null)
+                {
+                    await _goalService.UpdateUserGoalProgressAsync(workout.UserId);
+                }
+            }
+            catch (Exception)
+            {
+                // Goal progress update should not fail the set addition
+                // Log the error but continue
+            }
 
             return set;
         }
@@ -60,12 +74,29 @@ namespace RepTrackBusiness.Services
                 throw new NotFoundException($"Exercise set with ID {setId} was not found.");
 
             // Keep the same order when updating
-            set.Update(type, weight, repetitions, rpe, set.OrderInExercise);
-
-            if (isCompleted && !set.IsCompleted)
+            set.Update(type, weight, repetitions, rpe, set.OrderInExercise);            if (isCompleted && !set.IsCompleted)
                 set.MarkAsCompleted();
 
             await _unitOfWork.CompleteAsync();
+
+            // Update goal progress after updating a set
+            try
+            {
+                var workoutExercise = await _unitOfWork.WorkoutExercises.GetByIdAsync(set.WorkoutExerciseId);
+                if (workoutExercise != null)
+                {
+                    var workout = await _unitOfWork.WorkoutSessions.GetByIdAsync(workoutExercise.WorkoutSessionId);
+                    if (workout != null)
+                    {
+                        await _goalService.UpdateUserGoalProgressAsync(workout.UserId);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Goal progress update should not fail the set update
+                // Log the error but continue
+            }
 
             return set;
         }

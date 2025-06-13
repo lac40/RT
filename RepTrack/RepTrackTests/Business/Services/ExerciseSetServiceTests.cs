@@ -1,4 +1,5 @@
 ﻿using Moq;
+using RepTrackBusiness.Interfaces;
 using RepTrackBusiness.Services;
 using RepTrackCommon.Exceptions;
 using RepTrackDomain.Enums;
@@ -13,10 +14,10 @@ using Xunit;
 namespace RepTrackTests.Business.Services
 {
     public class ExerciseSetServiceTests
-    {
-        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    {        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IExerciseSetRepository> _mockSetRepo;
         private readonly Mock<IWorkoutExerciseRepository> _mockWorkoutExerciseRepo;
+        private readonly Mock<IGoalService> _mockGoalService;
         private readonly ExerciseSetService _setService;
 
         private readonly int _setId = 1;
@@ -27,11 +28,12 @@ namespace RepTrackTests.Business.Services
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockSetRepo = new Mock<IExerciseSetRepository>();
             _mockWorkoutExerciseRepo = new Mock<IWorkoutExerciseRepository>();
+            _mockGoalService = new Mock<IGoalService>();
 
             _mockUnitOfWork.Setup(uow => uow.ExerciseSets).Returns(_mockSetRepo.Object);
             _mockUnitOfWork.Setup(uow => uow.WorkoutExercises).Returns(_mockWorkoutExerciseRepo.Object);
 
-            _setService = new ExerciseSetService(_mockUnitOfWork.Object);
+            _setService = new ExerciseSetService(_mockUnitOfWork.Object, _mockGoalService.Object);
         }
 
         [Fact]

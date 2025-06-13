@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RepTrackCommon.Exceptions;
 using System;
+using System.Data;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -61,17 +63,41 @@ namespace RepTrackWeb.Middleware
 
                 case ArgumentException argEx:
                     statusCode = HttpStatusCode.BadRequest;
-                    message = argEx.Message;
+                    message = _env.IsDevelopment() ? argEx.Message : "Invalid request data.";
                     break;
 
                 case InvalidOperationException invalidOpEx:
                     statusCode = HttpStatusCode.BadRequest;
-                    message = invalidOpEx.Message;
+                    message = _env.IsDevelopment() ? invalidOpEx.Message : "Invalid operation.";
+                    break;                case DbUpdateConcurrencyException concurrencyEx:
+                    statusCode = HttpStatusCode.Conflict;
+                    message = "The record was modified by another user. Please refresh and try again.";
+                    break;
+
+                case DbUpdateException dbEx:
+                    statusCode = HttpStatusCode.InternalServerError;
+                    message = _env.IsDevelopment() 
+                        ? $"Database error: {dbEx.Message}" 
+                        : "A database error occurred. Please try again later.";
+                    _logger.LogError(dbEx, "Database update exception occurred");
+                    break;
+
+                case TimeoutException timeoutEx:
+                    statusCode = HttpStatusCode.RequestTimeout;
+                    message = "The request timed out. Please try again.";
+                    break;
+
+                case UnauthorizedAccessException unauthorizedEx:
+                    statusCode = HttpStatusCode.Unauthorized;
+                    message = "You are not authorized to perform this action.";
+                    redirectUrl = "/Identity/Account/Login";
                     break;
 
                 default:
                     statusCode = HttpStatusCode.InternalServerError;
-                    message = exception.Message + "\nAn unexpected error occurred. Please try again later.";
+                    message = _env.IsDevelopment() 
+                        ? $"Error: {exception.Message}" 
+                        : "An unexpected error occurred. Please try again later.";
                     redirectUrl = "/Home/Error";
                     break;
             }

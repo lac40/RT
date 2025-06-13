@@ -10,11 +10,10 @@
         <a asp-action="Create" class="btn btn-primary">Add Exercise</a>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-4">
+    <div class="row mb-3">        <div class="col-md-4">
             <div class="input-group">
                 <input type="text" id="searchExercise" class="form-control" placeholder="Search exercises...">
-                <button class="btn btn-outline-secondary" type="button" id="searchButton">Search</button>
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
             </div>
         </div>
         <div class="col-md-4">
@@ -58,12 +57,19 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Handle search functionality
-            $('#searchButton').click(performSearch);
-            $('#searchExercise').keyup(function(e) {
-                if (e.keyCode === 13) {
-                    performSearch();
-                }
+            let searchTimeout;
+
+            // Real-time search as user types with debouncing
+            $('#searchExercise').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(performSearch, 300); // 300ms delay
+            });
+
+            // Clear search functionality
+            $('#clearSearch').click(function() {
+                $('#searchExercise').val('');
+                $('#muscleGroupFilter').val('');
+                performSearch();
             });
 
             // Handle muscle group filtering
@@ -82,6 +88,19 @@
 
                     $(this).toggle(matchesSearchTerm && matchesMuscleGroup);
                 });
+
+                // Show/hide "no results" message
+                const visibleItems = $('.exercise-item:visible').length;
+                $('#noResultsMessage').remove();
+                
+                if (visibleItems === 0) {
+                    $('#exerciseContainer').append(
+                        '<div id="noResultsMessage" class="col-12 text-center text-muted py-4">' +
+                        '<i class="fas fa-search fa-2x mb-2"></i><br>' +
+                        'No exercises found matching your search criteria.' +
+                        '</div>'
+                    );
+                }
             }
         });
     </script>

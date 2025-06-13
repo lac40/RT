@@ -249,9 +249,7 @@ namespace RepTrackBusiness.Services
 
             // Check if user already has an active goal of this type for this exercise
             return !await _unitOfWork.Goals.HasActiveGoalForExerciseAsync(userId, exerciseId.Value, type);
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Calculates progress for strength goals based on achieving target weight and reps
         /// </summary>
         private async Task<decimal> CalculateStrengthProgressAsync(Goal goal)
@@ -265,6 +263,7 @@ namespace RepTrackBusiness.Services
 
             decimal maxAchievedWeight = 0;
             int maxRepsAtTargetWeight = 0;
+            bool targetAchieved = false;
 
             foreach (var workout in relevantWorkouts)
             {
@@ -282,14 +281,24 @@ namespace RepTrackBusiness.Services
                         if (set.Weight > maxAchievedWeight)
                             maxAchievedWeight = set.Weight;
 
-                        // Track max reps at or above target weight
+                        // Check if target is achieved: weight >= target AND reps >= target
+                        if (set.Weight >= goal.TargetWeight.Value && set.Repetitions >= goal.TargetReps.Value)
+                        {
+                            targetAchieved = true;
+                        }
+
+                        // Track max reps at or above target weight for progress calculation
                         if (set.Weight >= goal.TargetWeight.Value && set.Repetitions > maxRepsAtTargetWeight)
                             maxRepsAtTargetWeight = set.Repetitions;
                     }
                 }
             }
 
-            // Calculate progress: 70% weight, 30% reps (as specified in requirements)
+            // If target is achieved, return 100%
+            if (targetAchieved)
+                return 100;
+
+            // Calculate progress: 70% weight, 30% reps
             decimal weightProgress = goal.TargetWeight.Value > 0
                 ? Math.Min(100, (maxAchievedWeight / goal.TargetWeight.Value) * 100)
                 : 0;
